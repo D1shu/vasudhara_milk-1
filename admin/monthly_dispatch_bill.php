@@ -13,6 +13,8 @@ $endDate = $_GET['end_date'] ?? '';
 $districtId = $_GET['district_id'] ?? '';
 $talukaId = $_GET['taluka_id'] ?? '';
 $gharakId = $_GET['gharak_id'] ?? '';
+$ratePerLiter = isset($_GET['rate']) && $_GET['rate'] > 0 ? floatval($_GET['rate']) : 0;
+$gstPercent = isset($_GET['gst']) ? floatval($_GET['gst']) : 5.00;
 
 // Get data for dropdowns
 $districts = getDistricts();
@@ -25,10 +27,6 @@ $db = getDB();
 $reportData = [];
 if ($startDate && $endDate) {
     $filterApplied = true;
-    
-    // Base query using weekly_orders table
-    // Rate per liter for calculation
-    $ratePerLiter = 45.00;
     
     $query = "
         SELECT 
@@ -110,7 +108,7 @@ foreach ($reportData as $row) {
     $totalAmount += $row['total_amount'];
 }
 
-$totalGST = $totalAmount * 0.05; // 5% GST
+$totalGST = $totalAmount * ($gstPercent / 100);
 $grandTotal = $totalAmount + $totalGST;
 
 $csrfToken = generateCSRFToken();
@@ -258,6 +256,7 @@ $csrfToken = generateCSRFToken();
             font-size: 16px;
             font-weight: 600;
             margin: 0 10px;
+            cursor: pointer;
         }
         
         .btn-print:hover {
@@ -274,6 +273,7 @@ $csrfToken = generateCSRFToken();
             font-size: 16px;
             font-weight: 600;
             margin: 0 10px;
+            cursor: pointer;
         }
         
         .btn-back {
@@ -285,6 +285,24 @@ $csrfToken = generateCSRFToken();
             font-size: 16px;
             font-weight: 600;
             margin: 0 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .rate-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .gst-badge {
+            background: #f3e5f5;
+            color: #7b1fa2;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
         }
         
         @media print {
@@ -369,11 +387,27 @@ $csrfToken = generateCSRFToken();
                 </div>
                 
                 <div class="col-md-3 mb-3">
+                    <label class="form-label">Rate per Liter (₹) *</label>
+                    <input type="number" class="form-control" name="rate" 
+                           value="<?php echo $ratePerLiter > 0 ? $ratePerLiter : ''; ?>" 
+                           min="0" step="0.01" placeholder="Enter rate" required>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">GST (%) *</label>
+                    <select class="form-select" name="gst" required>
+                        <option value="5" <?php echo $gstPercent == 5 ? 'selected' : ''; ?>>5%</option>
+                        <option value="12" <?php echo $gstPercent == 12 ? 'selected' : ''; ?>>12%</option>
+                        <option value="18" <?php echo $gstPercent == 18 ? 'selected' : ''; ?>>18%</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
                     <label class="form-label">Gharak Center</label>
                     <input type="text" class="form-control" name="gharak_id" value="<?php echo htmlspecialchars($gharakId); ?>" placeholder="Enter Gharak Name">
                 </div>
                 
-                <div class="col-md-6 mb-3 d-flex align-items-end">
+                <div class="col-md-12 mb-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="fas fa-search"></i> Generate Report
                     </button>
@@ -433,16 +467,16 @@ $csrfToken = generateCSRFToken();
                 </div>
                 
                 <div class="filter-item">
-                    <label>Taluka Name:</label>
+                    <label>Rate per Liter:</label>
                     <div class="value">
-                        <?php echo $talukaId ? 'Selected Taluka' : 'All Talukas'; ?>
+                        <span class="rate-badge">₹<?php echo number_format($ratePerLiter, 2); ?></span>
                     </div>
                 </div>
                 
                 <div class="filter-item">
-                    <label>Gharak Center:</label>
+                    <label>GST:</label>
                     <div class="value">
-                        <?php echo $gharakId ? htmlspecialchars($gharakId) : 'All Centers'; ?>
+                        <span class="gst-badge"><?php echo $gstPercent; ?>%</span>
                     </div>
                 </div>
             </div>
@@ -474,7 +508,6 @@ $csrfToken = generateCSRFToken();
                 <tbody>
                     <?php 
                     $sr = 1;
-                    $ratePerLiter = 45.00; // Default rate - you can make this dynamic
                     foreach ($reportData as $row): 
                         $quantity = $row['total_quantity'] ?? 0;
                         $amount = $row['total_amount'] ?? 0;
@@ -512,7 +545,7 @@ $csrfToken = generateCSRFToken();
                     <span>₹<?php echo number_format($totalAmount, 2); ?></span>
                 </div>
                 <div class="gst-row">
-                    <span>GST (5%):</span>
+                    <span>GST (<?php echo $gstPercent; ?>%):</span>
                     <span>₹<?php echo number_format($totalGST, 2); ?></span>
                 </div>
                 <div class="gst-row grand-total">
