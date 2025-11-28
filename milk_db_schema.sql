@@ -197,16 +197,15 @@ CREATE TABLE activity_logs (
 -- Sample Data
 
 INSERT INTO districts (name) VALUES 
-('Navsari'), ('Valsad'), ('Dang'), ('Tapi');
+('Navsari'), ('Valsad'), ('Dang');
 
 INSERT INTO talukas (district_id, name) VALUES 
 (1, 'Vansda'), (1, 'Jalalpore'), (1, 'Chikhli'),
-(2, 'Valsad'), (2, 'Umbergaon'), (2, 'Pardi'),
+(2, 'Valsad'), (2, 'Umbergaon'), (2, 'Pardi');
 
 INSERT INTO villages (taluka_id, name) VALUES 
 (1, 'Vansda'), (1, 'Bhedkund'), (1, 'Adoli'),
-(2, 'Jalalpore'), (2, 'Unava'), (2, 'Uchhal'),
-
+(2, 'Jalalpore'), (2, 'Unava'), (2, 'Uchhal');
 
 INSERT INTO routes (route_number, route_name, vehicle_number, driver_name, driver_mobile) VALUES 
 ('R001', 'Vansda Town Route', 'GJ-05-AB-1234', 'Vikram Patel', '9876543210'),
@@ -214,21 +213,16 @@ INSERT INTO routes (route_number, route_name, vehicle_number, driver_name, drive
 ('R003', 'Jalalpore Route', 'GJ-05-EF-9012', 'Rajesh Desai', '9876543212');
 
 INSERT INTO anganwadi (village_id, route_id, aw_code, name, type, total_children, pregnant_women, contact_person, mobile) VALUES 
-(1, 1, 'AW001', 'Vansda Anganwadi Center', 'anganwadi', 50, 6, 'Priya Sharma', '9876543220'),
-(1, 1, 'AW002', 'Vansda Government School', 'school', 130, 0, 'Mohan Patel', '9876543221'),
-(2, 1, 'AW003', 'Bhedkund Anganwadi', 'anganwadi', 40, 4, 'Neha Gupta', '9876543222'),
-(3, 2, 'AW004', 'Adoli Balwadi', 'anganwadi', 35, 5, 'Khushboo Sharma', '9876543223'),
-(4, 3, 'AW005', 'Jalalpore Anganwadi', 'anganwadi', 45, 7, 'Rekha Patel', '9876543224');
+(1, 1, 'AW001', 'Vansda Anganwadi Center', 'anganwadi', 50, 6, 'Pushpa Damor', '9999999993'),
+(1, 1, 'AW002', 'Vansda Government School', 'school', 130, 0, 'Aman Malik', '9999999994'),
+(2, 1, 'AW003', 'Jalalpore Anganwadi', 'anganwadi', 40, 4, 'Abhi Patel', '9999999995');
 
 INSERT INTO users (anganwadi_id, name, mobile, email, role, status) VALUES 
-(1, 'Priya Sharma', '9876543220', 'priya@example.com', 'user', 'active'),
-(2, 'Mohan Patel', '9876543221', 'mohan@example.com', 'user', 'active'),
-(3, 'Neha Gupta', '9876543222', 'neha@example.com', 'user', 'active'),
-(4, 'Khushboo Sharma', '9876543223', 'khushboo@example.com', 'user', 'active'),
-(5, 'Rekha Patel', '9876543224', 'rekha@example.com', 'user', 'active'),
+(1, 'Pushpa Damor', '9999999993', 'pushpa@example.com', 'user', 'active'),
+(2, 'Aman Malik', '9999999994', 'aman@example.com', 'user', 'active'),
+(3, 'Abhi Patel', '9999999995', 'abhi@example.com', 'user', 'active'),
 (NULL, 'Admin User', '9999999999', 'admin@vasudhara.com', 'admin', 'active'),
-(NULL, 'Dishant Admin', '9000000001', 'dishant@vasudhara.com', 'admin', 'active'),
-(NULL, 'Pushpa Admin', '9000000002', 'pushpa@vasudhara.com', 'admin', 'active');
+(NULL, 'Dishant Admin', '9999999991', 'dishant@vasudhara.com', 'admin', 'active');
 
 INSERT INTO system_settings (setting_key, setting_value, description) VALUES 
 ('sms_api', 'fast2sms', 'SMS API provider (fast2sms/msg91)'),
@@ -243,6 +237,6 @@ INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 
 -- Sample weekly orders
 INSERT INTO weekly_orders (user_id, anganwadi_id, week_start_date, week_end_date, mon_qty, tue_qty, wed_qty, thu_qty, fri_qty, total_qty, children_allocation, pregnant_women_allocation, total_bags, status) VALUES 
-(1, 1, '2025-11-24', '2025-11-28', 22.5, 22.5, 22.5, 22.5, 22.5, 112.5, 90, 22.5, 225, 'pending'),
+(1, 1, '2025-11-24', '2025-11-28', 22, 22, 22, 22, 22, 110, 90, 22, 225, 'pending'),
 (2, 2, '2025-11-24', '2025-11-28', 60, 60, 60, 60, 60, 300, 300, 0, 600, 'approved'),
 (3, 3, '2025-11-24', '2025-11-28', 20.5, 19, 21, 20.5, 19, 100, 76, 24, 200, 'dispatched');
