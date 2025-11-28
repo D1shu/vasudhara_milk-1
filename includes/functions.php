@@ -200,7 +200,7 @@ function getVillagesByTaluka($talukaId) {
 function getAnganwadiList($filters = []) {
     $db = getDB();
     
-    $sql = "SELECT a.*, v.name as village_name, t.name as taluka_name, d.name as district_name, r.route_name
+    $sql = "SELECT a.*, v.name as village_name, v.taluka_id, t.name as taluka_name, t.district_id, d.name as district_name, r.route_name
             FROM anganwadi a
             LEFT JOIN villages v ON a.village_id = v.id
             LEFT JOIN talukas t ON v.taluka_id = t.id

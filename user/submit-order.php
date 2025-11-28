@@ -364,11 +364,11 @@ $nextMonday = date('Y-m-d', strtotime('next monday'));
             
             <!-- Anganwadi Info -->
             <div class="info-box">
-                <strong><i class="fas fa-building"></i> <?php echo htmlspecialchars($anganwadi['name']); ?></strong><br>
+                <strong><i class="fas fa-building"></i> <?php echo htmlspecialchars($anganwadi['name']?? 'N/A'); ?></strong><br>
                 <small>
-                    Code: <?php echo $anganwadi['aw_code']; ?> | 
-                    Children: <?php echo $anganwadi['total_children']; ?> | 
-                    Pregnant Women: <?php echo $anganwadi['pregnant_women']; ?>
+                    Code: <?php echo $anganwadi['aw_code']?? 'N/A'; ?> | 
+                    Children: <?php echo $anganwadi['total_children']?? 0; ?> | 
+                    Pregnant Women: <?php echo $anganwadi['pregnant_women']?? 0; ?>
                 </small>
             </div>
             

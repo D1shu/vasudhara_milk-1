@@ -123,16 +123,30 @@ $pageTitle = "Order Management";
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #48bb78;
+            --danger-color: #f56565;
+            --warning-color: #ed8936;
+            --info-color: #4299e1;
+        }
+        
         body {
-            background-color: #f7fafc;
+            background: linear-gradient(135deg, #f7fafc 0%, #eef2f7 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
         }
         
         .sidebar {
             min-height: 100vh;
+            max-height: 100vh;
             background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
             position: fixed;
             width: 260px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 100;
             padding: 0;
         }
         
@@ -141,30 +155,67 @@ $pageTitle = "Order Management";
             background: rgba(0,0,0,0.2);
             color: white;
             text-align: center;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .sidebar-header i {
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu {
+            padding: 15px 0;
         }
         
         .sidebar-menu a {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
+            padding: 14px 20px;
             color: #cbd5e0;
             text-decoration: none;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .sidebar-menu a:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
+            color: white;
+            padding-left: 25px;
+            border-left: 3px solid var(--primary-color);
         }
         
         .sidebar-menu a.active {
-            background: linear-gradient(90deg, #667eea, transparent);
+            background: linear-gradient(90deg, var(--primary-color), rgba(102, 126, 234, 0.1));
             color: white;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 25px;
+        }
+        
+        .sidebar-menu a[href="../logout.php"]:hover {
+            background: linear-gradient(90deg, rgba(245, 101, 101, 0.2), transparent) !important;
+            border-left-color: var(--danger-color) !important;
+        }
+        
+        .sidebar-menu a i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
         }
         
         .main-content {
             margin-left: 260px;
+            padding: 0;
         }
         
         .top-navbar {
             background: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 25px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .top-navbar h4 {
+            color: #2d3748;
+            font-weight: 600;
         }
         
         .content-area {
@@ -173,17 +224,24 @@ $pageTitle = "Order Management";
         
         .filter-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
             margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
         
         .card-custom {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .card-custom:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         }
         
         .badge-pending {
@@ -219,25 +277,36 @@ $pageTitle = "Order Management";
         }
         
         .table-custom thead {
-            background: #f7fafc;
+            background: linear-gradient(135deg, #f7fafc, #eef2f7);
         }
         
         .table-custom th {
             font-weight: 600;
-            color: #4a5568;
+            color: #2d3748;
             font-size: 13px;
             padding: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
         }
         
         .table-custom td {
             padding: 15px;
             vertical-align: middle;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .table-custom tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
         }
         
         .btn-action {
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-1px);
         }
         
         .status-badge-lg {
@@ -246,6 +315,68 @@ $pageTitle = "Order Management";
             border-radius: 25px;
             font-weight: 600;
             font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        
+        .form-control,
+        .form-select {
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: rgba(72, 187, 120, 0.1);
+            color: #22543d;
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .alert-danger {
+            background-color: rgba(245, 101, 101, 0.1);
+            color: #742a2a;
+            border-left: 4px solid var(--danger-color);
         }
     </style>
 </head>

@@ -147,16 +147,30 @@ $csrfToken = generateCSRFToken();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #48bb78;
+            --danger-color: #f56565;
+            --warning-color: #ed8936;
+            --info-color: #4299e1;
+        }
+        
         body {
-            background: #f7fafc;
+            background: linear-gradient(135deg, #f7fafc 0%, #eef2f7 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
         }
         
         .sidebar {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a202c, #2d3748);
+            max-height: 100vh;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
             position: fixed;
             width: 260px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 100;
         }
         
         .sidebar-header {
@@ -164,30 +178,67 @@ $csrfToken = generateCSRFToken();
             background: rgba(0,0,0,0.2);
             color: white;
             text-align: center;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .sidebar-header i {
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu {
+            padding: 15px 0;
         }
         
         .sidebar-menu a {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
+            padding: 14px 20px;
             color: #cbd5e0;
             text-decoration: none;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .sidebar-menu a:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
+            color: white;
+            padding-left: 25px;
+            border-left: 3px solid var(--primary-color);
         }
         
         .sidebar-menu a.active {
-            background: linear-gradient(90deg, #667eea, transparent);
+            background: linear-gradient(90deg, var(--primary-color), rgba(102, 126, 234, 0.1));
             color: white;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 25px;
+        }
+        
+        .sidebar-menu a[href="../logout.php"]:hover {
+            background: linear-gradient(90deg, rgba(245, 101, 101, 0.2), transparent) !important;
+            border-left-color: var(--danger-color) !important;
+        }
+        
+        .sidebar-menu a i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
         }
         
         .main-content {
             margin-left: 260px;
+            padding: 0;
         }
         
         .top-navbar {
             background: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 25px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .top-navbar h4 {
+            color: #2d3748;
+            font-weight: 600;
         }
         
         .content-area {
@@ -196,38 +247,145 @@ $csrfToken = generateCSRFToken();
         
         .card-custom {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
             margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .card-custom:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .card-body h5 {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .table {
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #f7fafc, #eef2f7);
+            color: #2d3748;
+            font-weight: 600;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            padding: 15px;
+        }
+        
+        .table tbody td {
+            vertical-align: middle;
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 12px 15px;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-sm:hover {
+            transform: translateY(-1px);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+        }
+        
+        .modal-title {
+            font-weight: 600;
         }
         
         .modal-body h6 {
             font-weight: 600;
-            color: #667eea;
-            margin-top: 1rem;
+            color: var(--primary-color);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .modal-body h6:first-of-type {
             margin-top: 0;
         }
         
-        .form-label.fw-semibold {
-            font-size: 13px;
+        .form-label {
+            font-weight: 500;
             color: #4a5568;
+            font-size: 13px;
+            margin-bottom: 8px;
         }
         
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             font-size: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
         }
         
         .form-control::placeholder {
-            color: #a0aec0;
+            color: #cbd5e0;
             font-size: 13px;
         }
         
         .border-bottom {
             border-color: #e2e8f0 !important;
+            padding-bottom: 12px;
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: rgba(72, 187, 120, 0.1);
+            color: #22543d;
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .alert-danger {
+            background-color: rgba(245, 101, 101, 0.1);
+            color: #742a2a;
+            border-left: 4px solid var(--danger-color);
         }
     </style>
 </head>
@@ -239,12 +397,16 @@ $csrfToken = generateCSRFToken();
         </div>
         
         <div class="sidebar-menu">
-            <a href="dashboard.php"><i class="fas fa-chart-line me-2"></i> Dashboard</a>
-            <a href="orders.php"><i class="fas fa-clipboard-list me-2"></i> Orders</a>
-            <a href="anganwadi.php" class="active"><i class="fas fa-building me-2"></i> Anganwadi</a>
-            <a href="users.php"><i class="fas fa-users me-2"></i> Users</a>
-            <a href="reports.php"><i class="fas fa-file-alt me-2"></i> Reports</a>
-            <a href="../logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+<a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="orders.php"><i class="fas fa-clipboard-list"></i> Orders</a>
+            <a href="anganwadi.php"  class="active"><i class="fas fa-building"></i> Anganwadi</a>
+            <a href="users.php"><i class="fas fa-users"></i> Users</a>
+            <a href="routes.php"><i class="fas fa-route"></i> Routes</a>
+            <a href="districts.php"><i class="fas fa-map-marked-alt"></i> Districts</a>
+            <a href="talukas.php" ><i class="fas fa-map-marker-alt"></i> Talukas</a>
+            <a href="villages.php" ><i class="fas fa-home"></i> Villages</a>
+            <a href="reports.php"><i class="fas fa-file-alt"></i> Reports</a>
+            <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>
     
@@ -556,8 +718,57 @@ $csrfToken = generateCSRFToken();
             $('#address').val(aw.address);
             $('#route').val(aw.route_id);
             
-            // Load cascading dropdowns
-            $('#village').html(`<option value="${aw.village_id}" selected>Loading...</option>`);
+            // First, get the district, taluka, and village IDs for this anganwadi
+            const districtId = aw.district_id;
+            const talukaId = aw.taluka_id;
+            const villageId = aw.village_id;
+            
+            // Set district
+            $('#district').val(districtId);
+            
+            // Load and set talukas
+            if (districtId) {
+                $.ajax({
+                    url: 'anganwadi.php?get_talukas=1',
+                    type: 'GET',
+                    data: { district_id: districtId },
+                    dataType: 'json',
+                    success: function(data) {
+                        let options = '<option value="">Select Taluka</option>';
+                        if (data && data.length > 0) {
+                            data.forEach(t => options += `<option value="${t.id}">${t.name}</option>`);
+                        }
+                        $('#taluka').html(options);
+                        $('#taluka').val(talukaId);
+                        
+                        // Load and set villages
+                        if (talukaId) {
+                            $.ajax({
+                                url: 'anganwadi.php?get_villages=1',
+                                type: 'GET',
+                                data: { taluka_id: talukaId },
+                                dataType: 'json',
+                                success: function(data) {
+                                    let villageOptions = '<option value="">Select Village</option>';
+                                    if (data && data.length > 0) {
+                                        data.forEach(v => villageOptions += `<option value="${v.id}">${v.name}</option>`);
+                                    }
+                                    $('#village').html(villageOptions);
+                                    $('#village').val(villageId);
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('Village Error:', error);
+                                    $('#village').html('<option value="">Error loading villages</option>');
+                                }
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Taluka Error:', error);
+                        $('#taluka').html('<option value="">Error loading talukas</option>');
+                    }
+                });
+            }
             
             $('#addModal').modal('show');
         }

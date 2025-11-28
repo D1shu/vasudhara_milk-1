@@ -40,8 +40,9 @@ $pageTitle = "Admin Dashboard";
         }
         
         body {
-            background-color: #f7fafc;
+            background: linear-gradient(135deg, #f7fafc 0%, #eef2f7 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
         }
         
         .sidebar {
@@ -112,28 +113,30 @@ $pageTitle = "Admin Dashboard";
         .sidebar-menu a {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
+            padding: 14px 20px;
             color: #cbd5e0;
             text-decoration: none;
-            transition: all 0.3s;
-            position: relative;
+            transition: all 0.3s ease;
+            font-size: 14px;
         }
         
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: linear-gradient(90deg, var(--primary-color), transparent);
+        .sidebar-menu a:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
             color: white;
+            padding-left: 25px;
+            border-left: 3px  solid var(--primary-color);
+        }
+        
+        .sidebar-menu a.active {
+            background: linear-gradient(90deg, var(--primary-color), rgba(102, 126, 234, 0.1));
+            color: white;
+            border-left: 3px solid var(--primary-color);
             padding-left: 25px;
         }
         
-        .sidebar-menu a.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 4px;
-            background: var(--primary-color);
+        .sidebar-menu a[href="../logout.php"]:hover {
+            background: linear-gradient(90deg, rgba(245, 101, 101, 0.2), transparent) !important;
+            border-left-color: var(--danger-color) !important;
         }
         
         .sidebar-menu a i {
@@ -149,8 +152,9 @@ $pageTitle = "Admin Dashboard";
         
         .top-navbar {
             background: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 25px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -178,16 +182,42 @@ $pageTitle = "Admin Dashboard";
             font-size: 18px;
         }
         
+        .logout-btn {
+            background-color: var(--danger-color);
+            color: white !important;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logout-btn:hover {
+            background-color: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(245, 101, 101, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+        
         .content-area {
             padding: 30px;
         }
         
         .stat-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
             margin-bottom: 20px;
             position: relative;
             overflow: hidden;
@@ -224,7 +254,7 @@ $pageTitle = "Admin Dashboard";
         
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         }
         
         .stat-icon {
@@ -267,21 +297,27 @@ $pageTitle = "Admin Dashboard";
         
         .card-custom {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(102, 126, 234, 0.1);
             margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .card-custom:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         }
         
         .card-header-custom {
-            background: transparent;
-            border-bottom: 2px solid #e2e8f0;
+            background: linear-gradient(135deg, #f7fafc, #eef2f7);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
             padding: 20px 25px;
             font-weight: 600;
             font-size: 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            color: #2d3748;
         }
         
         .chart-container {
@@ -292,24 +328,30 @@ $pageTitle = "Admin Dashboard";
         
         .table-custom {
             margin-bottom: 0;
+            font-size: 14px;
         }
         
         .table-custom thead {
-            background: #f7fafc;
+            background: linear-gradient(135deg, #f7fafc, #eef2f7);
         }
         
         .table-custom th {
             font-weight: 600;
-            color: #4a5568;
-            border-bottom: 2px solid #e2e8f0;
+            color: #2d3748;
+            border: 1px solid rgba(102, 126, 234, 0.1);
             padding: 15px;
             font-size: 13px;
             text-transform: uppercase;
         }
         
         .table-custom td {
-            padding: 15px;
+            padding: 12px 15px;
             vertical-align: middle;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .table-custom tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
         }
         
         .badge-status {
@@ -335,17 +377,19 @@ $pageTitle = "Admin Dashboard";
         .quick-action-card {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 30px;
             text-align: center;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
             text-decoration: none;
             display: block;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
         
         .quick-action-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
             color: white;
         }
         
@@ -393,6 +437,9 @@ $pageTitle = "Admin Dashboard";
             </a>
             
             <div class="menu-section">Master Data</div>
+                <a href="anganwadi.php">
+                <i class="fas fa-building"></i> Anganwadi/Schools
+            </a>
             <a href="districts.php">
                 <i class="fas fa-map-marked-alt"></i> Districts
             </a>
@@ -401,9 +448,6 @@ $pageTitle = "Admin Dashboard";
             </a>
             <a href="villages.php">
                 <i class="fas fa-home"></i> Villages
-            </a>
-            <a href="anganwadi.php">
-                <i class="fas fa-building"></i> Anganwadi/Schools
             </a>
             <a href="routes.php">
                 <i class="fas fa-route"></i> Routes
@@ -415,11 +459,6 @@ $pageTitle = "Admin Dashboard";
             <div class="menu-section">Reports</div>
             <a href="reports.php">
                 <i class="fas fa-file-alt"></i> Reports
-            </a>
-           
-            
-            <a href="../logout.php" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px;">
-                <i class="fas fa-sign-out-alt"></i> Logout
             </a>
         </div>
     </div>
@@ -440,6 +479,9 @@ $pageTitle = "Admin Dashboard";
                 <div class="user-avatar">
                     <?php echo strtoupper(substr($userName, 0, 1)); ?>
                 </div>
+                <a href="../logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </div>
         
@@ -448,63 +490,63 @@ $pageTitle = "Admin Dashboard";
             <!-- Statistics Cards -->
             <div class="row">
                 <div class="col-lg-2 col-md-4 col-sm-6">
-                    <div class="stat-card primary">
+                    <a href="orders.php" class="stat-card primary" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
                         <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
                             <i class="fas fa-clipboard-list"></i>
                         </div>
                         <h3><?php echo $stats['total_orders']; ?></h3>
                         <p>Total Orders</p>
-                    </div>
+                    </a>
                 </div>
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
-                    <div class="stat-card warning">
+                    <a href="orders.php?status=pending" class="stat-card warning" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
                         <div class="stat-icon" style="background: var(--warning-color);">
                             <i class="fas fa-hourglass-half"></i>
                         </div>
                         <h3><?php echo $stats['pending_orders']; ?></h3>
                         <p>Pending Approvals</p>
-                    </div>
+                    </a>
                 </div>
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
-                    <div class="stat-card success">
+                    <a href="orders.php?status=approved" class="stat-card success" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
                         <div class="stat-icon" style="background: var(--success-color);">
                             <i class="fas fa-check-circle"></i>
                         </div>
                         <h3><?php echo $stats['approved_this_week']; ?></h3>
                         <p>Approved This Week</p>
-                    </div>
+                    </a>
                 </div>
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
-                    <div class="stat-card info">
+                    <a href="anganwadi.php" class="stat-card info" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
                         <div class="stat-icon" style="background: var(--info-color);">
                             <i class="fas fa-building"></i>
                         </div>
                         <h3><?php echo $stats['total_anganwadis']; ?></h3>
                         <p>Anganwadis</p>
-                    </div>
+                    </a>
                 </div>
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
-                    <div class="stat-card danger">
+                    <a href="routes.php" class="stat-card danger" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
                         <div class="stat-icon" style="background: var(--danger-color);">
                             <i class="fas fa-route"></i>
                         </div>
                         <h3><?php echo $stats['total_routes']; ?></h3>
                         <p>Routes</p>
-                    </div>
+                    </a>
                 </div>
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
-                    <div class="stat-card primary">
+                    <a href="users.php" class="stat-card primary" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
                         <div class="stat-icon" style="background: #805ad5;">
                             <i class="fas fa-users"></i>
                         </div>
                         <h3><?php echo $stats['total_users']; ?></h3>
                         <p>Active Users</p>
-                    </div>
+                    </a>
                 </div>
             </div>
             

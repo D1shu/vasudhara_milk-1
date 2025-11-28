@@ -24,16 +24,47 @@ $csrfToken = generateCSRFToken();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #48bb78;
+            --danger-color: #f56565;
+            --warning-color: #ed8936;
+            --info-color: #4299e1;
+        }
+        
         body {
-            background: #f7fafc;
+            background: linear-gradient(135deg, #f7fafc 0%, #eef2f7 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
         }
         
         .sidebar {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a202c, #2d3748);
+            max-height: 100vh;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
             position: fixed;
             width: 260px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
         }
         
         .sidebar-header {
@@ -41,20 +72,50 @@ $csrfToken = generateCSRFToken();
             background: rgba(0,0,0,0.2);
             color: white;
             text-align: center;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .sidebar-header i {
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu {
+            padding: 15px 0;
         }
         
         .sidebar-menu a {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
+            padding: 14px 20px;
             color: #cbd5e0;
             text-decoration: none;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .sidebar-menu a:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
+            color: white;
+            padding-left: 25px;
+            border-left: 3px solid var(--primary-color);
         }
         
         .sidebar-menu a.active {
-            background: linear-gradient(90deg, #667eea, transparent);
+            background: linear-gradient(90deg, var(--primary-color), rgba(102, 126, 234, 0.1));
             color: white;
+            border-left: 3px solid var(--primary-color);
+            padding-left: 25px;
+        }
+        
+        .sidebar-menu a[href="../logout.php"]:hover {
+            background: linear-gradient(90deg, rgba(245, 101, 101, 0.2), transparent) !important;
+            border-left-color: var(--danger-color) !important;
+        }
+        
+        .sidebar-menu a i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
         }
         
         .main-content {
