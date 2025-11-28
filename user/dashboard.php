@@ -1,23 +1,32 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
+}
+
 require_once '../config.php';
 require_once '../auth.php';
 require_once '../includes/functions.php';
 
-Auth::requireLogin();
-
-$userId = Auth::getUserId();
+$userId = $_SESSION['user_id'];
 $userName = $_SESSION['user_name'];
-$anganwadiName = $_SESSION['anganwadi_name'];
+$userRole = $_SESSION['user_role'] ?? 'user';
+
+// Safe anganwadi info check
+$anganwadiId = $_SESSION['anganwadi_id'] ?? null;
+$anganwadiName = $_SESSION['anganwadi_name'] ?? $_SESSION['user_name'];
 
 // Get dashboard statistics
-$stats = getDashboardStats($userId, 'user');
+$stats = getDashboardStats($userId, $userRole);
 
 // Get recent orders
 $db = getDB();
 $stmt = $db->prepare("
     SELECT wo.*, a.name as anganwadi_name, a.aw_code
     FROM weekly_orders wo
-    JOIN anganwadi a ON wo.anganwadi_id = a.id
+    LEFT JOIN anganwadi a ON wo.anganwadi_id = a.id
     WHERE wo.user_id = ?
     ORDER BY wo.created_at DESC
     LIMIT 5

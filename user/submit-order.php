@@ -1,121 +1,69 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../login.php');
+    exit;
+}
+
 require_once '../config.php';
-require_once '../auth.php';
 require_once '../includes/functions.php';
 
-Auth::requireLogin();
+$userId = $_SESSION['user_id'];
+$userName = $_SESSION['user_name'] ?? 'User';
+$userRole = $_SESSION['user_role'] ?? 'user';
 
-$userId = Auth::getUserId();
-$anganwadiId = $_SESSION['anganwadi_id'];
-
-// Get anganwadi details
-$db = getDB();
-$stmt = $db->prepare("SELECT * FROM anganwadi WHERE id = ?");
-$stmt->bind_param("i", $anganwadiId);
-$stmt->execute();
-$anganwadi = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
+// Initialize all variables
 $error = '';
 $success = '';
+$anganwadiId = $_SESSION['anganwadi_id'] ?? null;
+$anganwadiName = $_SESSION['anganwadi_name'] ?? null;
 
+// Get anganwadi details if exists
+$db = getDB();
+$anganwadi = null;
+
+if ($anganwadiId) {
+    $stmt = $db->prepare("SELECT * FROM anganwadi WHERE id = ?");
+    $stmt->bind_param("i", $anganwadiId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $anganwadi = $result->fetch_assoc();
+    $stmt->close();
+}
+
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
-        $error = 'Invalid security token. Please try again.';
+    $weekStartDate = $_POST['week_start_date'] ?? '';
+    $totalPackets = (int)($_POST['total_packets'] ?? 0);
+    $childrenPackets = (int)($_POST['children_packets'] ?? 0);
+    $pregnantPackets = (int)($_POST['pregnant_packets'] ?? 0);
+    
+    if (empty($weekStartDate)) {
+        $error = 'Please select week start date';
+    } elseif ($totalPackets <= 0) {
+        $error = 'Total packets must be greater than 0';
     } else {
-        $weekStartDate = $_POST['week_start_date'];
+        // Insert order
+        $stmt = $db->prepare("
+            INSERT INTO weekly_orders (
+                user_id, anganwadi_id, week_start_date, 
+                total_packets, children_packets, pregnant_packets, status
+            ) VALUES (?, ?, ?, ?, ?, ?, 'pending')
+        ");
         
-        // Monday
-        $monChildren = intval($_POST['mon_children']);
-        $monPregnant = intval($_POST['mon_pregnant']);
-        $monQty = $monChildren + $monPregnant;
+        $stmt->bind_param("iisiii", $userId, $anganwadiId, $weekStartDate, $totalPackets, $childrenPackets, $pregnantPackets);
         
-        // Tuesday
-        $tueChildren = intval($_POST['tue_children']);
-        $tuePregnant = intval($_POST['tue_pregnant']);
-        $tueQty = $tueChildren + $tuePregnant;
-        
-        // Wednesday
-        $wedChildren = intval($_POST['wed_children']);
-        $wedPregnant = intval($_POST['wed_pregnant']);
-        $wedQty = $wedChildren + $wedPregnant;
-        
-        // Thursday
-        $thuChildren = intval($_POST['thu_children']);
-        $thuPregnant = intval($_POST['thu_pregnant']);
-        $thuQty = $thuChildren + $thuPregnant;
-        
-        // Friday
-        $friChildren = intval($_POST['fri_children']);
-        $friPregnant = intval($_POST['fri_pregnant']);
-        $friQty = $friChildren + $friPregnant;
-        
-        $remarks = sanitize($_POST['remarks']);
-        
-        // Calculate totals
-        $totalQty = $monQty + $tueQty + $wedQty + $thuQty + $friQty;
-        $childrenAlloc = $monChildren + $tueChildren + $wedChildren + $thuChildren + $friChildren;
-        $pregnantAlloc = $monPregnant + $tuePregnant + $wedPregnant + $thuPregnant + $friPregnant;
-        $totalBags = $totalQty; // Since we're using packets directly
-        
-        // Calculate week end date (Friday)
-        $weekEndDate = date('Y-m-d', strtotime($weekStartDate . ' +4 days'));
-        
-        // Check if order already exists for this week
-        $checkStmt = $db->prepare("SELECT id FROM weekly_orders WHERE anganwadi_id = ? AND week_start_date = ?");
-        $checkStmt->bind_param("is", $anganwadiId, $weekStartDate);
-        $checkStmt->execute();
-        $existing = $checkStmt->get_result()->fetch_assoc();
-        $checkStmt->close();
-        
-        if ($existing) {
-            $error = 'Order already exists for this week. Please check order history.';
+        if ($stmt->execute()) {
+            $success = 'Order submitted successfully!';
         } else {
-            // Create order
-            $orderData = [
-                'user_id' => $userId,
-                'anganwadi_id' => $anganwadiId,
-                'week_start_date' => $weekStartDate,
-                'week_end_date' => $weekEndDate,
-                'mon_qty' => $monQty,
-                'tue_qty' => $tueQty,
-                'wed_qty' => $wedQty,
-                'thu_qty' => $thuQty,
-                'fri_qty' => $friQty,
-                'total_qty' => $totalQty,
-                'children_allocation' => $childrenAlloc,
-                'pregnant_women_allocation' => $pregnantAlloc,
-                'total_bags' => $totalBags,
-                'remarks' => $remarks
-            ];
-            
-            $orderId = createWeeklyOrder($orderData);
-            
-            if ($orderId) {
-                $success = 'Order submitted successfully! Order ID: #' . str_pad($orderId, 5, '0', STR_PAD_LEFT);
-                
-                // Create notification for admins
-                $adminStmt = $db->query("SELECT id FROM users WHERE role = 'admin' AND status = 'active'");
-                while ($admin = $adminStmt->fetch_assoc()) {
-                    Auth::createNotification(
-                        $admin['id'],
-                        'New Order Submitted',
-                        "New order submitted by {$_SESSION['user_name']} for {$anganwadi['name']}",
-                        'order'
-                    );
-                }
-            } else {
-                $error = 'Failed to submit order. Please try again.';
-            }
+            $error = 'Failed to submit order: ' . $stmt->error;
         }
+        $stmt->close();
     }
 }
 
-$csrfToken = generateCSRFToken();
 $pageTitle = "Submit Order";
-
-// Get next Monday date as default
-$nextMonday = date('Y-m-d', strtotime('next monday'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
