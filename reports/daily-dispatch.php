@@ -201,7 +201,7 @@ $stmt->close();
         </div>
         <?php endif; ?>
         <div class="info-row">
-            <div class="info-label">Total Centers:</div>
+            <div class="info-label">Total Centers</div>
             <div class="info-value"><?php echo count($orders); ?></div>
         </div>
     </div>

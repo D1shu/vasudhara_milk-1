@@ -530,7 +530,7 @@ $csrfToken = generateCSRFToken();
                     
                     <!-- Total Row -->
                     <tr class="total-row">
-                        <td colspan="5" class="text-end"><strong>Sub Total:</strong></td>
+                        <td colspan="5" class="text-end"><strong>Sub Total</strong></td>
                         <td class="text-end"><strong><?php echo number_format($totalQuantity, 2); ?></strong></td>
                         <td></td>
                         <td class="text-end"><strong>₹<?php echo number_format($totalAmount, 2); ?></strong></td>
@@ -541,15 +541,15 @@ $csrfToken = generateCSRFToken();
             <!-- GST Section -->
             <div class="gst-section">
                 <div class="gst-row">
-                    <span>Sub Total:</span>
+                    <span>Sub Total</span>
                     <span>₹<?php echo number_format($totalAmount, 2); ?></span>
                 </div>
                 <div class="gst-row">
-                    <span>GST (<?php echo $gstPercent; ?>%):</span>
+                    <span>GST (<?php echo $gstPercent; ?>%)</span>
                     <span>₹<?php echo number_format($totalGST, 2); ?></span>
                 </div>
                 <div class="gst-row grand-total">
-                    <span>Grand Total:</span>
+                    <span>Grand Total</span>
                     <span>₹<?php echo number_format($grandTotal, 2); ?></span>
                 </div>
             </div>

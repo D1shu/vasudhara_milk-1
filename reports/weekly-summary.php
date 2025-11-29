@@ -227,7 +227,7 @@ if ($format === 'excel') {
             <?php echo date('d-m-Y', strtotime($weekEnd)); ?>
         </div>
         <div class="info-item">
-            <span class="info-label">Total Orders:</span>
+            <span class="info-label">Total Orders</span>
             <?php echo $totalOrders; ?>
         </div>
         <div class="info-item">
@@ -235,7 +235,7 @@ if ($format === 'excel') {
             <?php echo date('d-m-Y H:i'); ?>
         </div>
         <div class="info-item">
-            <span class="info-label">Total Quantity:</span>
+            <span class="info-label">Total Quantity</span>
             <?php echo number_format($grandTotal['total_qty'], 2); ?> Liters
         </div>
         <div class="info-item">

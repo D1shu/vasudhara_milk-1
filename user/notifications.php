@@ -10,12 +10,7 @@ $pageTitle = "Notifications";
 
 // Get all notifications
 $db = getDB();
-$stmt = $db->prepare("
-    SELECT * FROM notifications 
-    WHERE user_id = ? 
-    ORDER BY created_at DESC 
-    LIMIT 50
-");
+$stmt = $db->prepare("\n    SELECT * FROM notifications \n    WHERE user_id = ? \n    ORDER BY created_at DESC \n    LIMIT 50\n");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -51,346 +46,149 @@ $unreadCount = Auth::getUnreadNotificationsCount($userId);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
     <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --success-color: #48bb78;
-            --danger-color: #f56565;
-            --warning-color: #ed8936;
-            --info-color: #4299e1;
+        :root{
+            --primary:#667eea;
+            --secondary:#764ba2;
+            --muted:#62748b;
+            --bg:#f8fafc;
+            --card:#ffffff;
+            --success:#48bb78;
+            --info:#38bdf8;
+            --warning:#f59e0b;
+            --danger:#f56565;
+            --radius:12px;
+            --maxw:1100px;
         }
-        
-        body {
-            background-color: #f7fafc;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            padding: 0;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            z-index: 100;
-        }
-        
-        .sidebar-header {
-            padding: 20px;
-            background: rgba(0,0,0,0.1);
-            color: white;
-            text-align: center;
-        }
-        
-        .sidebar-header h4 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        
-        .sidebar-menu {
-            padding: 20px 0;
-        }
-        
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border-left: 4px solid white;
-        }
-        
-        .sidebar-menu a i {
-            margin-right: 10px;
-            width: 20px;
-        }
-        
-        .main-content {
-            margin-left: 260px;
-            padding: 0;
-        }
-        
-        .top-navbar {
-            background: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 90;
-        }
-        
-        .content-area {
-            padding: 30px;
-        }
-        
-        .notification-item {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary-color);
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        
-        .notification-item.unread {
-            background: #f0f4ff;
-        }
-        
-        .notification-item:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateX(5px);
-        }
-        
-        .notification-item.order {
-            border-left-color: var(--primary-color);
-        }
-        
-        .notification-item.approval {
-            border-left-color: var(--success-color);
-        }
-        
-        .notification-item.dispatch {
-            border-left-color: var(--info-color);
-        }
-        
-        .notification-item.system {
-            border-left-color: var(--warning-color);
-        }
-        
-        .notification-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 10px;
-        }
-        
-        .notification-title {
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 16px;
-            margin: 0;
-        }
-        
-        .notification-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .badge-order {
-            background: #e0e7ff;
-            color: #667eea;
-        }
-        
-        .badge-approval {
-            background: #dcfce7;
-            color: #22863a;
-        }
-        
-        .badge-dispatch {
-            background: #cffafe;
-            color: #0369a1;
-        }
-        
-        .badge-system {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .notification-message {
-            color: #4a5568;
-            margin: 10px 0;
-            font-size: 14px;
-        }
-        
-        .notification-time {
-            color: #a0aec0;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 30px;
-        }
-        
-        .empty-state i {
-            font-size: 64px;
-            color: #cbd5e0;
-            margin-bottom: 20px;
-        }
-        
-        .empty-state h4 {
-            color: #4a5568;
-            margin-bottom: 10px;
-        }
-        
-        .empty-state p {
-            color: #a0aec0;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .btn-custom {
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary-custom {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-primary-custom:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-        }
-        
-        .badge-unread {
-            background: #f56565;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            margin-left: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 0;
-                overflow: hidden;
-            }
-            
-            .main-content {
-                margin-left: 0;
-            }
-            
-            .content-area {
-                padding: 15px;
-            }
-        }
+
+        *{box-sizing:border-box}
+        body{font-family:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,Arial;background:var(--bg);color:#0f172a;margin:0}
+        .app{display:flex;min-height:100vh}
+
+        /* Sidebar */
+        .sidebar{width:250px;min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;padding:18px;position:fixed;left:0;top:0}
+        .brand{text-align:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .brand h4{margin:8px 0 0}
+        .nav-links{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+        .nav-links a{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.95);text-decoration:none;padding:10px;border-radius:10px;font-weight:600}
+        .nav-links a.active{background:rgba(0,0,0,0.12);border-left:4px solid rgba(255,255,255,0.14)}
+        .small-badge{background:rgba(255,255,255,0.12);padding:4px 8px;border-radius:999px;font-weight:700;font-size:12px}
+
+        /* Main area */
+        .main{margin-left:250px;width:calc(100% - 250px)}
+        .topbar{background:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(15,23,42,0.04);position:sticky;top:0;z-index:90}
+        .content{padding:26px;max-width:var(--maxw);margin:0 auto}
+
+        .actions{display:flex;gap:10px;align-items:center;margin-bottom:18px}
+        .btn-ghost{background:transparent;border:1px solid rgba(15,23,42,0.06);padding:8px 12px;border-radius:8px}
+
+        .notification-item{background:var(--card);border-radius:10px;padding:16px;margin-bottom:12px;border-left:4px solid var(--primary);transition:all .18s ease}
+        .notification-item.unread{background:#f0f4ff}
+        .notification-item:hover{transform:translateX(6px);box-shadow:0 8px 26px rgba(15,23,42,0.06)}
+
+        .notification-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+        .notification-title{font-weight:700;margin:0;color:#0f172a}
+        .notification-badge{padding:6px 12px;border-radius:999px;font-weight:700;font-size:12px}
+        .badge-order{background:#eef2ff;color:var(--primary)}
+        .badge-approval{background:#dcfce7;color:var(--success)}
+        .badge-dispatch{background:#ecfeff;color:var(--info)}
+        .badge-system{background:#fff4e6;color:var(--warning)}
+
+        .notification-message{color:#425063;margin:10px 0 6px;font-size:14px}
+        .notification-meta{display:flex;justify-content:space-between;align-items:center;color:#9aa3b3;font-size:13px}
+
+        .empty{padding:60px;text-align:center;color:#64748b}
+        .empty i{font-size:56px;margin-bottom:12px;color:#cbd5e0}
+
+        @media (max-width:900px){.daily-grid{grid-template-columns:repeat(2,1fr)}}
+        @media (max-width:720px){.sidebar{transform:translateX(-260px)}.main{margin-left:0;width:100%}.content{padding:16px}}
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-glass-whiskey fa-2x mb-2"></i>
-            <h4>Vasudhara Milk</h4>
-            <small>Distribution System</small>
-        </div>
-        
-        <div class="sidebar-menu">
-            <a href="dashboard.php">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a href="submit-order.php">
-                <i class="fas fa-plus-circle"></i> Submit Order
-            </a>
-            <a href="order-history.php">
-                <i class="fas fa-history"></i> Order History
-            </a>
-            <a href="profile.php">
-                <i class="fas fa-user"></i> My Profile
-            </a>
-            <a href="notifications.php" class="active">
-                <i class="fas fa-bell"></i> Notifications
-                <?php if ($unreadCount > 0): ?>
-                    <span class="badge-unread"><?php echo $unreadCount; ?></span>
-                <?php endif; ?>
-            </a>
-            <a href="../logout.php">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </div>
-    
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="top-navbar">
-            <h4 class="mb-0">Notifications</h4>
-            <div>
-                <?php if ($unreadCount > 0): ?>
-                    <a href="?action=mark_all_read" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-check-double"></i> Mark All as Read
-                    </a>
+    <div class="app">
+        <aside class="sidebar" aria-label="Main navigation">
+            <div class="brand">
+                <i class="fas fa-glass-whiskey fa-2x"></i>
+                <h4>Vasudhara Milk</h4>
+                <small>Distribution System</small>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="submit-order.php"><i class="fas fa-plus-circle"></i> Submit Order</a>
+                <a href="order-history.php"><i class="fas fa-history"></i> Order History</a>
+                <a href="profile.php"><i class="fas fa-user"></i> My Profile</a>
+                <a href="notifications.php" class="active"><i class="fas fa-bell"></i> Notifications <?php if ($unreadCount>0): ?> <span style="margin-left:auto" class="small-badge"><?php echo (int)$unreadCount; ?></span><?php endif; ?></a>
+                <a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <h4 style="margin:0">Notifications</h4>
+                <div>
+                    <?php if ($unreadCount > 0): ?>
+                        <a href="?action=mark_all_read" class="btn btn-sm btn-outline-primary"><i class="fas fa-check-double me-2"></i>Mark all as read</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="content">
+                <?php if (empty($notifications)): ?>
+                    <div class="empty">
+                        <i class="fas fa-inbox"></i>
+                        <h4>No Notifications</h4>
+                        <p>You're all caught up — check back later for updates.</p>
+                        <a href="dashboard.php" class="btn btn-sm btn-ghost"><i class="fas fa-home me-2"></i> Back to dashboard</a>
+                    </div>
+                <?php else: ?>
+
+                    <div class="actions">
+                        <a href="dashboard.php" class="btn btn-ghost"><i class="fas fa-home me-2"></i> Dashboard</a>
+                    </div>
+
+                    <?php foreach ($notifications as $notif): ?>
+                        <?php
+                            $type = $notif['type'] ?? 'system';
+                            $badgeClass = 'badge-system';
+                            if ($type === 'order') $badgeClass = 'badge-order';
+                            if ($type === 'approval') $badgeClass = 'badge-approval';
+                            if ($type === 'dispatch') $badgeClass = 'badge-dispatch';
+                        ?>
+
+                        <a href="<?php echo !$notif['is_read'] ? '?mark_read=1&id=' . (int)$notif['id'] : '#'; ?>" style="text-decoration:none; color:inherit;">
+                            <div class="notification-item <?php echo !$notif['is_read'] ? 'unread' : ''; ?> <?php echo htmlspecialchars($type); ?>">
+                                <div class="notification-header">
+                                    <h5 class="notification-title"><?php echo htmlspecialchars($notif['title']); ?></h5>
+                                    <div class="notification-badge <?php echo $badgeClass; ?>"><?php echo ucfirst(htmlspecialchars($type)); ?></div>
+                                </div>
+
+                                <div class="notification-message"><?php echo htmlspecialchars($notif['message']); ?></div>
+
+                                <div class="notification-meta">
+                                    <div><i class="fas fa-clock me-1"></i><?php echo formatDateTime($notif['created_at']); ?></div>
+                                    <div>
+                                        <?php if (!$notif['is_read']): ?>
+                                            <a href="?mark_read=1&id=<?php echo (int)$notif['id']; ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-check me-1"></i>Mark</a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                    <?php endforeach; ?>
+
                 <?php endif; ?>
             </div>
-        </div>
-        
-        <div class="content-area">
-            <?php if (empty($notifications)): ?>
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <h4>No Notifications</h4>
-                    <p>You're all caught up! Check back later for updates.</p>
-                </div>
-            <?php else: ?>
-                <div class="action-buttons">
-                    <a href="dashboard.php" class="btn btn-custom btn-primary-custom">
-                        <i class="fas fa-home"></i> Back to Dashboard
-                    </a>
-                </div>
-                
-                <?php foreach ($notifications as $notif): ?>
-                    <div class="notification-item <?php echo $notif['type']; ?> <?php echo !$notif['is_read'] ? 'unread' : ''; ?>">
-                        <div class="notification-header">
-                            <h5 class="notification-title">
-                                <?php echo htmlspecialchars($notif['title']); ?>
-                            </h5>
-                            <span class="notification-badge badge-<?php echo $notif['type']; ?>">
-                                <?php echo ucfirst($notif['type']); ?>
-                            </span>
-                        </div>
-                        
-                        <p class="notification-message">
-                            <?php echo htmlspecialchars($notif['message']); ?>
-                        </p>
-                        
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="notification-time">
-                                <i class="fas fa-clock"></i> 
-                                <?php echo formatDateTime($notif['created_at']); ?>
-                            </span>
-                            
-                            <?php if (!$notif['is_read']): ?>
-                                <a href="?mark_read=1&id=<?php echo $notif['id']; ?>" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-check"></i> Mark as Read
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
+        </main>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

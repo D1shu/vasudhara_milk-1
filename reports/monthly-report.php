@@ -394,8 +394,8 @@ if ($format === 'excel') {
             <li><strong>Average Weekly Distribution:</strong> 
                 <?php echo number_format($summary['total_quantity'] / count($weekData), 2); ?> Liters
             </li>
-            <li><strong>Total Beneficiaries Served:</strong> 
-                Children: <?php echo number_format($summary['total_children'], 0); ?> | 
+            <li><strong>Total Beneficiaries Served</strong>
+                Children: <?php echo number_format($summary['total_children'], 0); ?> |
                 Pregnant Women: <?php echo number_format($summary['total_pregnant'], 0); ?>
             </li>
             <li><strong>Distribution Efficiency:</strong> 

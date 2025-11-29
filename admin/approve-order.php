@@ -448,15 +448,15 @@ $pageTitle = "Review Order";
                         
                         <div class="summary-box">
                             <div class="summary-item">
-                                <span>Total Packets:</span>
+                                <span>Total Packets</span>
                                 <strong><?php echo number_format($order['total_qty'], 0); ?></strong>
                             </div>
                             <div class="summary-item">
-                                <span>Total Bags:</span>
+                                <span>Total Bags</span>
                                 <strong><?php echo $order['total_bags']; ?></strong>
                             </div>
                             <div class="summary-item">
-                                <span>Status:</span>
+                                <span>Status</span>
                                 <strong><?php echo ucfirst($order['status']); ?></strong>
                             </div>
                         </div>
