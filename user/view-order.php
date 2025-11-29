@@ -266,7 +266,6 @@ $pageTitle = "Order Details";
                         <div class="summary-box mb-3">
                             <h5 class="mb-3"><i class="fas fa-calculator"></i> Order Summary</h5>
 
-                            <div class="summary-item"><span>Total Packets:</span><strong><?php echo (int)$order['total_qty']; ?></strong></div>
                             <div class="summary-item"><span>Children Packets</span><strong><?php echo (int)$order['children_allocation']; ?></strong></div>
                             <div class="summary-item"><span>Pregnant Packets</span><strong><?php echo (int)$order['pregnant_women_allocation']; ?></strong></div>
                             <div class="summary-item"><span>Status</span><strong><?php echo ucfirst(htmlspecialchars($order['status'])); ?></strong></div>

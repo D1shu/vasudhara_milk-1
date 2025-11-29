@@ -1,4 +1,4 @@
- <?php
+<?php
 /**
  * Weekly Summary Report
  * Generates consolidated weekly report with anganwadi-wise breakdown
@@ -10,7 +10,7 @@ require_once '../includes/functions.php';
 
 Auth::requireAdmin();
 
-$weekStart = $_GET['week_start'] ?? date('Y-m-d', strtotime('monday this week'));
+$weekStart = $_GET['start_date'] ?? date('Y-m-d', strtotime('monday this week'));
 $format = $_GET['format'] ?? 'pdf';
 
 // Calculate week end (Friday)
@@ -19,7 +19,7 @@ $weekEnd = date('Y-m-d', strtotime($weekStart . ' +4 days'));
 // Get all orders for this week
 $db = getDB();
 $stmt = $db->prepare("
-    SELECT wo.*, 
+    SELECT wo.*,
            a.name as anganwadi_name, a.aw_code, a.type as anganwadi_type,
            a.contact_person, a.mobile,
            v.name as village_name, t.name as taluka_name, d.name as district_name,
@@ -66,7 +66,7 @@ $stmt->close();
 if ($format === 'excel') {
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="weekly_summary_' . $weekStart . '.xls"');
-    
+
     echo '<table border="1">';
     echo '<tr><th colspan="12" style="background: #333; color: white; text-align: center; font-size: 16px;">
           WEEKLY SUMMARY REPORT<br>Week: ' . date('d-m-Y', strtotime($weekStart)) . ' to ' . date('d-m-Y', strtotime($weekEnd)) . '</th></tr>';
@@ -74,7 +74,7 @@ if ($format === 'excel') {
     echo '<th>Sr.</th><th>Code</th><th>Anganwadi/School</th><th>Location</th>';
     echo '<th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th>';
     echo '<th>Total (L)</th><th>Bags</th><th>Status</th></tr>';
-    
+
     $sr = 1;
     foreach ($orders as $order) {
         echo '<tr>';
@@ -92,7 +92,7 @@ if ($format === 'excel') {
         echo '<td>' . ucfirst($order['status']) . '</td>';
         echo '</tr>';
     }
-    
+
     echo '<tr style="background: #ffff99; font-weight: bold;">';
     echo '<td colspan="4">GRAND TOTAL</td>';
     echo '<td>' . number_format($grandTotal['mon'], 2) . '</td>';
@@ -116,8 +116,8 @@ if ($format === 'excel') {
     <meta charset="UTF-8">
     <title>Weekly Summary Report</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
+        body {
+            font-family: Arial, sans-serif;
             font-size: 11px;
             margin: 20px;
         }
@@ -214,16 +214,16 @@ if ($format === 'excel') {
 </head>
 <body>
     <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
-    
+
     <div class="header">
         <h1>VASUDHARA MILK DISTRIBUTION</h1>
         <h2>Weekly Summary Report</h2>
     </div>
-    
+
     <div class="info-grid">
         <div class="info-item">
             <span class="info-label">Week Period:</span>
-            <?php echo date('d-m-Y', strtotime($weekStart)); ?> to 
+            <?php echo date('d-m-Y', strtotime($weekStart)); ?> to
             <?php echo date('d-m-Y', strtotime($weekEnd)); ?>
         </div>
         <div class="info-item">
@@ -247,14 +247,14 @@ if ($format === 'excel') {
             <?php echo number_format($grandTotal['children'], 2); ?> L
         </div>
     </div>
-    
+
     <?php if (empty($orders)): ?>
         <div style="text-align: center; padding: 50px; background: #fff3cd; border-radius: 10px;">
             <h3>No Orders Found</h3>
             <p>No approved orders for this week period.</p>
         </div>
     <?php else: ?>
-    
+
     <table>
         <thead>
             <tr>
@@ -276,9 +276,9 @@ if ($format === 'excel') {
             </tr>
         </thead>
         <tbody>
-            <?php 
+            <?php
             $sr = 1;
-            foreach ($orders as $order): 
+            foreach ($orders as $order):
             ?>
             <tr>
                 <td><?php echo $sr++; ?></td>
@@ -301,7 +301,7 @@ if ($format === 'excel') {
                 <td><?php echo ucfirst($order['status']); ?></td>
             </tr>
             <?php endforeach; ?>
-            
+
             <tr class="total-row">
                 <td colspan="4" style="text-align: right;">GRAND TOTAL:</td>
                 <td><?php echo number_format($grandTotal['mon'], 2); ?></td>
@@ -315,7 +315,7 @@ if ($format === 'excel') {
             </tr>
         </tbody>
     </table>
-    
+
     <div class="summary-box">
         <div class="summary-card">
             <div class="number"><?php echo $totalOrders; ?></div>
@@ -334,7 +334,7 @@ if ($format === 'excel') {
             <div class="label">Daily Average</div>
         </div>
     </div>
-    
+
     <div style="margin-top: 50px; display: flex; justify-content: space-between;">
         <div style="width: 45%; border-top: 1px solid #000; padding-top: 10px; margin-top: 30px;">
             <strong>Prepared By</strong><br>
@@ -345,11 +345,11 @@ if ($format === 'excel') {
             <small>Name & Signature</small>
         </div>
     </div>
-    
+
     <div style="margin-top: 30px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;">
         Generated on: <?php echo date('d-m-Y H:i:s'); ?> | Vasudhara Milk Distribution System
     </div>
-    
+
     <?php endif; ?>
 </body>
 </html>

@@ -329,9 +329,7 @@ $pageTitle = "Order History";
                             <div class="order-actions">
                                 <a href="view-order.php?id=<?php echo (int)$order['id']; ?>" class="btn btn-view"><i class="fas fa-eye me-2"></i> View Details</a>
 
-                                <?php if (in_array($order['status'], ['approved', 'dispatched', 'completed'])): ?>
-                                    <a href="../reports/order-pdf.php?id=<?php echo (int)$order['id']; ?>" class="btn btn-outline-danger" target="_blank"><i class="fas fa-file-pdf me-2"></i> Download PDF</a>
-                                <?php endif; ?>
+                                
                             </div>
                         </article>
                     <?php endforeach; ?>

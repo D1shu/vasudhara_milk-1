@@ -33,12 +33,31 @@ if ($db) {
 // Ensure we have anganwadi_id: prefer session, otherwise fetch from users table
 $anganwadiId = $_SESSION['anganwadi_id'] ?? null;
 if (!$anganwadiId) {
-    $stmt = $db->prepare("SELECT anganwadi_id FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT anganwadi_id, village_id FROM users WHERE id = ?");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($row = $res->fetch_assoc()) {
         $anganwadiId = $row['anganwadi_id'] ? (int)$row['anganwadi_id'] : null;
+        $villageId = $row['village_id'] ? (int)$row['village_id'] : null;
+
+        // If no anganwadi_id but has village_id, find an anganwadi in that village
+        if (!$anganwadiId && $villageId) {
+            $stmt2 = $db->prepare("SELECT id FROM anganwadi WHERE village_id = ? LIMIT 1");
+            $stmt2->bind_param("i", $villageId);
+            $stmt2->execute();
+            $res2 = $stmt2->get_result();
+            if ($row2 = $res2->fetch_assoc()) {
+                $anganwadiId = (int)$row2['id'];
+                // Update user with anganwadi_id
+                $stmt3 = $db->prepare("UPDATE users SET anganwadi_id = ? WHERE id = ?");
+                $stmt3->bind_param("ii", $anganwadiId, $userId);
+                $stmt3->execute();
+                $stmt3->close();
+            }
+            $stmt2->close();
+        }
+
         if ($anganwadiId) $_SESSION['anganwadi_id'] = $anganwadiId;
     }
     $stmt->close();
@@ -477,9 +496,9 @@ $pageTitle = "Submit Order";
                                             <div class="col-12 col-md-8">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
-                                                    <input type="number" class="form-control children-qty" name="mon_children" min="0" value="0" required data-day="mon">
+                                                    <input type="number" class="form-control children-qty" name="mon_children" min="0" value="" required data-day="mon">
                                                     <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="mon_pregnant" min="0" value="0" data-day="mon">
+                                                    <input type="number" class="form-control pregnant-qty" name="mon_pregnant" min="0" value="" data-day="mon">
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -497,9 +516,9 @@ $pageTitle = "Submit Order";
                                             <div class="col-12 col-md-8">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
-                                                    <input type="number" class="form-control children-qty" name="tue_children" min="0" value="0" required data-day="tue">
+                                                    <input type="number" class="form-control children-qty" name="tue_children" min="0" value="" required data-day="tue">
                                                     <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="tue_pregnant" min="0" value="0" data-day="tue">
+                                                    <input type="number" class="form-control pregnant-qty" name="tue_pregnant" min="0" value="" data-day="tue">
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -517,9 +536,9 @@ $pageTitle = "Submit Order";
                                             <div class="col-12 col-md-8">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
-                                                    <input type="number" class="form-control children-qty" name="wed_children" min="0" value="0" required data-day="wed">
+                                                    <input type="number" class="form-control children-qty" name="wed_children" min="0" value="" required data-day="wed">
                                                     <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="wed_pregnant" min="0" value="0" data-day="wed">
+                                                    <input type="number" class="form-control pregnant-qty" name="wed_pregnant" min="0" value="" data-day="wed">
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -537,9 +556,9 @@ $pageTitle = "Submit Order";
                                             <div class="col-12 col-md-8">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
-                                                    <input type="number" class="form-control children-qty" name="thu_children" min="0" value="0" required data-day="thu">
+                                                    <input type="number" class="form-control children-qty" name="thu_children" min="0" value="" required data-day="thu">
                                                     <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="thu_pregnant" min="0" value="0" data-day="thu">
+                                                    <input type="number" class="form-control pregnant-qty" name="thu_pregnant" min="0" value="" data-day="thu">
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">

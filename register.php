@@ -2,6 +2,19 @@
 require_once 'config.php';
 require_once 'includes/functions.php';
 
+// Fetch districts
+$db = getDB();
+$districts = [];
+$stmt = $db->prepare("SELECT id, name FROM districts ORDER BY name");
+if ($stmt) {
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $districts[] = $row;
+    }
+    $stmt->close();
+}
+
 $error = '';
 $success = '';
 
@@ -9,10 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $mobile = trim($_POST['mobile'] ?? '');
     $email = trim($_POST['email'] ?? '');
+    $village_id = $_POST['village_id'] ?? '';
     $role = $_POST['role'] ?? 'user';
     
     // Validation
-    if (empty($name) || empty($mobile) || empty($email)) {
+    if (empty($name) || empty($mobile) || empty($email) || empty($village_id)) {
         $error = 'All fields are required';
     } elseif (strlen($mobile) !== 10 || !is_numeric($mobile)) {
         $error = 'Mobile number must be 10 digits';
@@ -21,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $db = getDB();
-            
+
             // Check if mobile already exists
             $stmt = $db->prepare("SELECT id FROM users WHERE mobile = ?");
             if (!$stmt) {
@@ -30,24 +44,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("s", $mobile);
                 $stmt->execute();
                 $result = $stmt->get_result();
-                
+
                 if ($result->num_rows > 0) {
                     $error = 'Mobile number already registered. Please <a href="login.php">login here</a>';
                 } else {
                     // Insert new user
-                    $stmt = $db->prepare("INSERT INTO users (name, mobile, email, role, status) VALUES (?, ?, ?, ?, 'active')");
-                    
-                    if (!$stmt) {
+                    $insertStmt = $db->prepare("INSERT INTO users (name, mobile, email, village_id, role, status) VALUES (?, ?, ?, ?, ?, 'active')");
+
+                    if (!$insertStmt) {
                         $error = 'Database error: ' . $db->error;
                     } else {
-                        $stmt->bind_param("ssss", $name, $mobile, $email, $role);
-                        
-                        if ($stmt->execute()) {
+                        $insertStmt->bind_param("sssis", $name, $mobile, $email, $village_id, $role);
+
+                        if ($insertStmt->execute()) {
                             $success = 'Registration successful! Redirecting to login...';
                             echo '<meta http-equiv="refresh" content="2; url=login.php">';
                         } else {
-                            $error = 'Registration failed: ' . $stmt->error;
+                            $error = 'Registration failed: ' . $insertStmt->error;
                         }
+                        $insertStmt->close();
                     }
                 }
                 $stmt->close();
@@ -78,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .register-container {
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
             padding: 20px;
         }
         
@@ -282,21 +297,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         <div class="form-group">
                             <label for="email">Email Address *</label>
-                            <input type="email" id="email" name="email" 
-                                   placeholder="Enter your email" 
+                            <input type="email" id="email" name="email"
+                                   placeholder="Enter your email"
                                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
                                    required>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="role">User Type *</label>
-                            <select id="role" name="role" required>
-                                <option value="user">Regular User</option>
-                                <option value="anganwadi">Anganwadi Center</option>
-                                <option value="school">School</option>
+                            <label for="district">District *</label>
+                            <select class="form-select" id="district" required>
+                                <option value="">Select District</option>
+                                <?php foreach ($districts as $d): ?>
+                                    <option value="<?php echo $d['id']; ?>"><?php echo htmlspecialchars($d['name']); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
-                        
+
+                        <div class="form-group">
+                            <label for="taluka">Taluka *</label>
+                            <select class="form-select" id="taluka" disabled required>
+                                <option value="">Select District First</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="village">Village *</label>
+                            <select class="form-select" name="village_id" id="village" disabled required>
+                                <option value="">Select Taluka First</option>
+                            </select>
+                        </div>
+
                         <button type="submit" class="btn-register">
                             <i class="fas fa-check"></i> Create Account
                         </button>
@@ -318,5 +348,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             © 2025 Vasudhara Milk Distribution System
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const districtSelect = document.getElementById('district');
+        const talukaSelect = document.getElementById('taluka');
+        const villageSelect = document.getElementById('village');
+        
+        // District change par Talukas load karo
+        districtSelect.addEventListener('change', function() {
+            const districtId = this.value;
+            
+            // Reset taluka and village
+            talukaSelect.innerHTML = '<option value="">Loading...</option>';
+            talukaSelect.disabled = true;
+            villageSelect.innerHTML = '<option value="">Select Taluka First</option>';
+            villageSelect.disabled = true;
+            
+            if (districtId) {
+                // Fetch talukas
+                fetch('ajax/get-talukas.php?district_id=' + districtId)
+                    .then(response => response.json())
+                    .then(data => {
+                        talukaSelect.innerHTML = '<option value="">Select Taluka</option>';
+                        
+                        if (data.success && data.data && data.data.length > 0) {
+                            data.data.forEach(taluka => {
+                                const option = document.createElement('option');
+                                option.value = taluka.id;
+                                option.textContent = taluka.name;
+                                talukaSelect.appendChild(option);
+                            });
+                            talukaSelect.disabled = false;
+                        } else {
+                            talukaSelect.innerHTML = '<option value="">No Talukas Found</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading talukas:', error);
+                        talukaSelect.innerHTML = '<option value="">Error Loading Talukas</option>';
+                        alert('Error loading talukas. Please try again.');
+                    });
+            } else {
+                talukaSelect.innerHTML = '<option value="">Select District First</option>';
+            }
+        });
+        
+        // Taluka change par Villages load karo
+        talukaSelect.addEventListener('change', function() {
+            const talukaId = this.value;
+            
+            // Reset village
+            villageSelect.innerHTML = '<option value="">Loading...</option>';
+            villageSelect.disabled = true;
+            
+            if (talukaId) {
+                // Fetch villages
+                fetch('ajax/get-villages.php?taluka_id=' + talukaId)
+                    .then(response => response.json())
+                    .then(data => {
+                        villageSelect.innerHTML = '<option value="">Select Village</option>';
+                        
+                        if (data.success && data.data && data.data.length > 0) {
+                            data.data.forEach(village => {
+                                const option = document.createElement('option');
+                                option.value = village.id;
+                                option.textContent = village.name;
+                                villageSelect.appendChild(option);
+                            });
+                            villageSelect.disabled = false;
+                        } else {
+                            villageSelect.innerHTML = '<option value="">No Villages Found</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading villages:', error);
+                        villageSelect.innerHTML = '<option value="">Error Loading Villages</option>';
+                        alert('Error loading villages. Please try again.');
+                    });
+            } else {
+                villageSelect.innerHTML = '<option value="">Select Taluka First</option>';
+            }
+        });
+    });
+    </script>
 </body>
 </html>

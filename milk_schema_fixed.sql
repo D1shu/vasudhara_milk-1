@@ -1,16 +1,12 @@
--- vasudhara_milk_clean_test.sql
--- Vasudhara Milk Distribution System - Clean schema + minimal test records
--- Created: 2025-11-28
--- Purpose: schema + minimal test data for development/testing (no trash)
+-- Vasudhara Milk Distribution System Database Schema
+-- Created: 2025
 
 CREATE DATABASE IF NOT EXISTS vasudhara_milk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE vasudhara_milk;
 
--- -------------------------
--- MASTER TABLES
--- -------------------------
+-- Master Tables
 
-CREATE TABLE IF NOT EXISTS districts (
+CREATE TABLE districts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     status ENUM('active', 'inactive') DEFAULT 'active',
@@ -19,7 +15,7 @@ CREATE TABLE IF NOT EXISTS districts (
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS talukas (
+CREATE TABLE talukas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     district_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -32,7 +28,7 @@ CREATE TABLE IF NOT EXISTS talukas (
     UNIQUE KEY unique_taluka (district_id, name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS villages (
+CREATE TABLE villages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     taluka_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -45,7 +41,7 @@ CREATE TABLE IF NOT EXISTS villages (
     UNIQUE KEY unique_village (taluka_id, name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS routes (
+CREATE TABLE routes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     route_number VARCHAR(50) NOT NULL UNIQUE,
     route_name VARCHAR(150) NOT NULL,
@@ -58,7 +54,7 @@ CREATE TABLE IF NOT EXISTS routes (
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS anganwadi (
+CREATE TABLE anganwadi (
     id INT AUTO_INCREMENT PRIMARY KEY,
     village_id INT NOT NULL,
     route_id INT,
@@ -82,8 +78,9 @@ CREATE TABLE IF NOT EXISTS anganwadi (
     INDEX idx_type (type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    village_id INT,
     anganwadi_id INT,
     name VARCHAR(100) NOT NULL,
     mobile VARCHAR(15) NOT NULL UNIQUE,
@@ -93,18 +90,18 @@ CREATE TABLE IF NOT EXISTS users (
     last_login TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (village_id) REFERENCES villages(id) ON DELETE SET NULL,
     FOREIGN KEY (anganwadi_id) REFERENCES anganwadi(id) ON DELETE SET NULL,
     INDEX idx_mobile (mobile),
     INDEX idx_role (role),
     INDEX idx_status (status),
+    INDEX idx_village (village_id),
     INDEX idx_anganwadi (anganwadi_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- -------------------------
--- TRANSACTION TABLES
--- -------------------------
+-- Transaction Tables
 
-CREATE TABLE IF NOT EXISTS otp_logs (
+CREATE TABLE otp_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     mobile VARCHAR(15) NOT NULL,
     otp VARCHAR(6) NOT NULL,
@@ -115,7 +112,7 @@ CREATE TABLE IF NOT EXISTS otp_logs (
     INDEX idx_expiry (expiry_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS weekly_orders (
+CREATE TABLE weekly_orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     anganwadi_id INT NOT NULL,
@@ -148,7 +145,7 @@ CREATE TABLE IF NOT EXISTS weekly_orders (
     UNIQUE KEY unique_weekly_order (anganwadi_id, week_start_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS order_status_history (
+CREATE TABLE order_status_history (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
     old_status VARCHAR(50),
@@ -161,7 +158,7 @@ CREATE TABLE IF NOT EXISTS order_status_history (
     INDEX idx_order (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     title VARCHAR(200) NOT NULL,
@@ -175,7 +172,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS system_settings (
+CREATE TABLE system_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     setting_key VARCHAR(100) NOT NULL UNIQUE,
     setting_value TEXT,
@@ -183,7 +180,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS activity_logs (
+CREATE TABLE activity_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     action VARCHAR(100) NOT NULL,
@@ -200,96 +197,49 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- -------------------------
--- CLEAN TEST DATA (minimal)
--- -------------------------
+-- Sample Data
 
--- districts (minimal set for tests)
-INSERT INTO districts (name, status) VALUES
-('Navsari', 'active'),
-('Valsad',  'active'),
-('Dang',    'active');
+INSERT INTO districts (name) VALUES 
+('Navsari'), ('Valsad'), ('Dang'), ('Tapi');
 
--- talukas (couple per district)
-INSERT INTO talukas (district_id, name, status) VALUES
-((SELECT id FROM districts WHERE name='Navsari' LIMIT 1), 'Vansda',  'active'),
-((SELECT id FROM districts WHERE name='Navsari' LIMIT 1), 'Jalalpore','active'),
+INSERT INTO talukas (district_id, name) VALUES 
+(1, 'Vansda'), (1, 'Jalalpore'), (1, 'Chikhli'),
+(2, 'Valsad'), (2, 'Umbergaon'), (2, 'Pardi');
 
-((SELECT id FROM districts WHERE name='Valsad' LIMIT 1), 'Valsad',  'active'),
-((SELECT id FROM districts WHERE name='Valsad' LIMIT 1), 'Pardi',   'active'),
+INSERT INTO villages (taluka_id, name) VALUES 
+(1, 'Vansda'), (1, 'Bhedkund'), (1, 'Adoli'),
+(2, 'Jalalpore'), (2, 'Unava'), (2, 'Uchhal');
 
-((SELECT id FROM districts WHERE name='Dang' LIMIT 1), 'Ahwa',      'active'),
-((SELECT id FROM districts WHERE name='Dang' LIMIT 1), 'Waghai',    'active');
+INSERT INTO routes (route_number, route_name, vehicle_number, driver_name, driver_mobile) VALUES 
+('R001', 'Vansda Town Route', 'GJ-05-AB-1234', 'Vikram Patel', '9876543210'),
+('R002', 'Vansda Rural Route', 'GJ-05-CD-5678', 'Ajay Singh', '9876543211'),
+('R003', 'Jalalpore Route', 'GJ-05-EF-9012', 'Rajesh Desai', '9876543212');
 
--- villages (one or two per taluka for testing)
-INSERT INTO villages (taluka_id, name, status) VALUES
-((SELECT id FROM talukas WHERE name='Vansda'   AND district_id=(SELECT id FROM districts WHERE name='Navsari') LIMIT 1), 'Vansda','active'),
-((SELECT id FROM talukas WHERE name='Vansda'   AND district_id=(SELECT id FROM districts WHERE name='Navsari') LIMIT 1), 'Khadakiya','active'),
+INSERT INTO anganwadi (village_id, route_id, aw_code, name, type, total_children, pregnant_women, contact_person, mobile) VALUES 
+(1, 1, 'AW001', 'Vansda Anganwadi Center', 'anganwadi', 50, 6, 'Pushpa Damor', '9328366460'),
+(1, 1, 'AW002', 'Vansda Government School', 'school', 130, 0, 'Aman Malik', '8160948069'),
+(2, 1, 'AW003', 'Jalalpore Anganwadi', 'anganwadi', 40, 4, 'Abhi Patel', '7284832327');
 
-((SELECT id FROM talukas WHERE name='Jalalpore' AND district_id=(SELECT id FROM districts WHERE name='Navsari') LIMIT 1), 'Jalalpore','active'),
+INSERT INTO users (anganwadi_id, name, mobile, email, role, status) VALUES 
+(1, 'Pushpa Damor', '9328366460', 'pushpa@example.com', 'user', 'active'),
+(2, 'Aman Malik', '8160948069', 'aman@example.com', 'user', 'active'),
+(3, 'Abhi Patel', '7284832327', 'abhi@example.com', 'user', 'active'),
+(NULL, 'Admin User', '9999999999', 'admin@vasudhara.com', 'admin', 'active'),
+(NULL, 'Dishant Admin', '9999999991', 'dishant@vasudhara.com', 'admin', 'active');
 
-((SELECT id FROM talukas WHERE name='Valsad'   AND district_id=(SELECT id FROM districts WHERE name='Valsad') LIMIT 1), 'Valsad','active'),
-((SELECT id FROM talukas WHERE name='Pardi'    AND district_id=(SELECT id FROM districts WHERE name='Valsad') LIMIT 1), 'Pardi','active'),
+INSERT INTO system_settings (setting_key, setting_value, description) VALUES 
+('sms_api', 'fast2sms', 'SMS API provider (fast2sms/msg91)'),
+('sms_api_key', '', 'API key for SMS service'),
+('bag_size', '500', 'Milk bag size in ml'),
+('otp_expiry', '5', 'OTP expiry time in minutes'),
+('session_timeout', '30', 'Session timeout in minutes'),
+('order_approval_sms', '1', 'Send SMS on order approval (0/1)'),
+('company_name', 'Vasudhara Milk Distribution', 'Company name for reports'),
+('company_address', 'Vansda, Navsari, Gujarat', 'Company address'),
+('company_phone', '020-12345678', 'Company contact number');
 
-((SELECT id FROM talukas WHERE name='Ahwa'     AND district_id=(SELECT id FROM districts WHERE name='Dang') LIMIT 1), 'Ahwa','active'),
-((SELECT id FROM talukas WHERE name='Waghai'   AND district_id=(SELECT id FROM districts WHERE name='Dang') LIMIT 1), 'Waghai','active');
-
--- routes (single test route)
-INSERT INTO routes (route_number, route_name, vehicle_number, driver_name, driver_mobile, status) VALUES
-('RT-TEST-01', 'Test Route 1', 'GJ-XX-0001', 'Test Driver', '9000000000', 'active');
-
--- anganwadi (two test centres)
-INSERT INTO anganwadi (village_id, route_id, aw_code, name, type, total_children, pregnant_women, contact_person, mobile, status) VALUES
-(
-  (SELECT id FROM villages WHERE name='Vansda' AND taluka_id=(SELECT id FROM talukas WHERE name='Vansda' AND district_id=(SELECT id FROM districts WHERE name='Navsari')) LIMIT 1),
-  (SELECT id FROM routes WHERE route_number='RT-TEST-01' LIMIT 1),
-  'AW001', 'Vansda Test Anganwadi', 'anganwadi', 10, 1, 'Test Worker 1', '9999999991', 'active'
-),
-(
-  (SELECT id FROM villages WHERE name='Khadakiya' AND taluka_id=(SELECT id FROM talukas WHERE name='Vansda' AND district_id=(SELECT id FROM districts WHERE name='Navsari')) LIMIT 1),
-  (SELECT id FROM routes WHERE route_number='RT-TEST-01' LIMIT 1),
-  'AW002', 'Khadakiya Test Anganwadi', 'anganwadi', 8, 0, 'Test Worker 2', '9999999992', 'active'
-);
-
--- users (two test users linked to the test anganwadis)
-INSERT INTO users (anganwadi_id, name, mobile, email, role, status) VALUES
-((SELECT id FROM anganwadi WHERE aw_code='AWW001' LIMIT 1), 'Abhi Test', '9999999991', 'priya.test@example.com', 'user', 'active'),
-((SELECT id FROM anganwadi WHERE aw_code='AWW002' LIMIT 1), 'Aman Test', '9999999992', 'mohan.test@example.com', 'user', 'active'),
-(NULL, 'Admin Test', '9999999999', 'admin.test@example.com', 'admin', 'active');
-
--- system settings (minimal)
-INSERT INTO system_settings (setting_key, setting_value, description) VALUES
-('sms_api', 'mock', 'SMS API provider - test'),
-('bag_size', '500', 'Milk bag size in ml - test');
-
--- optional: one sample weekly order (test) — links user + anganwadi
-INSERT INTO weekly_orders (user_id, anganwadi_id, week_start_date, week_end_date, mon_qty, tue_qty, wed_qty, thu_qty, fri_qty, total_qty, children_allocation, pregnant_women_allocation, total_bags, status)
-VALUES
-(
-  (SELECT id FROM users WHERE mobile='9999999991' LIMIT 1),
-  (SELECT id FROM anganwadi WHERE aw_code='AW001' LIMIT 1),
-  CURDATE(), DATE_ADD(CURDATE(), INTERVAL 4 DAY),
-  1.0, 1.0, 1.0, 1.0, 1.0,
-  5.0, 5.0, 0.0, 10, 'pending'
-);
-INSERT INTO weekly_orders (user_id, anganwadi_id, week_start_date, week_end_date, mon_qty, tue_qty, wed_qty, thu_qty, fri_qty, total_qty, children_allocation, pregnant_women_allocation, total_bags, status)
-VALUES
-(
-  (SELECT id FROM users WHERE mobile='9999999992' LIMIT 1),
-  (SELECT id FROM anganwadi WHERE aw_code='AW002' LIMIT 1),
-  CURDATE(), DATE_ADD(CURDATE(), INTERVAL 4 DAY),
-  1.0, 1.0, 1.0, 1.0, 1.0,
-  5.0, 5.0, 0.0, 10, 'pending'
-);
-
-
-
--- -------------------------
--- CLEANUP / Sanity notes
--- -------------------------
--- This file is intentionally minimal — add more test rows as needed.
--- If you want me to:
---  1) generate more test anganwadis/users in bulk, or
---  2) create a CSV with 100+ villages for Navsari/Valsad/Dang,
--- say the word and I'll prepare it.
-
+-- Sample weekly orders
+INSERT INTO weekly_orders (user_id, anganwadi_id, week_start_date, week_end_date, mon_qty, tue_qty, wed_qty, thu_qty, fri_qty, total_qty, children_allocation, pregnant_women_allocation, total_bags, status) VALUES 
+(1, 1, '2025-11-24', '2025-11-28', 22, 22, 22, 22, 22, 110, 90, 22, 225, 'pending'),
+(2, 2, '2025-11-24', '2025-11-28', 60, 60, 60, 60, 60, 300, 300, 0, 600, 'approved'),
+(3, 3, '2025-11-24', '2025-11-28', 20.5, 19, 21, 20.5, 19, 100, 76, 24, 200, 'dispatched');
