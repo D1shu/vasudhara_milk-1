@@ -19,6 +19,20 @@ $success = '';
 $anganwadiId = $_SESSION['anganwadi_id'] ?? null;
 $anganwadiName = $_SESSION['anganwadi_name'] ?? null;
 
+// CSRF Token - Generate only if not exists
+if (!isset($_SESSION['csrf_token'])) {
+    $csrfToken = bin2hex(random_bytes(32));
+    $_SESSION['csrf_token'] = $csrfToken;
+} else {
+    $csrfToken = $_SESSION['csrf_token'];
+}
+
+// Calculate next Monday
+$nextMonday = date('Y-m-d', strtotime('next monday'));
+if (date('N') == 1) { // If today is Monday
+    $nextMonday = date('Y-m-d');
+}
+
 // Get anganwadi details if exists
 $db = getDB();
 $anganwadi = null;
@@ -30,36 +44,119 @@ if ($anganwadiId) {
     $result = $stmt->get_result();
     $anganwadi = $result->fetch_assoc();
     $stmt->close();
+} else {
+    // If no anganwadi assigned, try to get it from database
+    $stmt = $db->prepare("SELECT a.* FROM anganwadi a 
+                          INNER JOIN users u ON u.anganwadi_id = a.id 
+                          WHERE u.id = ?");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $anganwadi = $result->fetch_assoc();
+    $stmt->close();
+    
+    if ($anganwadi) {
+        $anganwadiId = $anganwadi['id'];
+        $_SESSION['anganwadi_id'] = $anganwadiId;
+        $_SESSION['anganwadi_name'] = $anganwadi['name'];
+    }
 }
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $weekStartDate = $_POST['week_start_date'] ?? '';
-    $totalPackets = (int)($_POST['total_packets'] ?? 0);
-    $childrenPackets = (int)($_POST['children_packets'] ?? 0);
-    $pregnantPackets = (int)($_POST['pregnant_packets'] ?? 0);
-    
-    if (empty($weekStartDate)) {
-        $error = 'Please select week start date';
-    } elseif ($totalPackets <= 0) {
-        $error = 'Total packets must be greater than 0';
+    // CSRF validation - Check if token exists before validating
+    if (!isset($_SESSION['csrf_token']) || !isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        // Regenerate token for next attempt
+        $csrfToken = bin2hex(random_bytes(32));
+        $_SESSION['csrf_token'] = $csrfToken;
+        $error = 'Invalid request. Please refresh the page and try again.';
     } else {
-        // Insert order
-        $stmt = $db->prepare("
-            INSERT INTO weekly_orders (
-                user_id, anganwadi_id, week_start_date, 
-                total_packets, children_packets, pregnant_packets, status
-            ) VALUES (?, ?, ?, ?, ?, ?, 'pending')
-        ");
+        $weekStartDate = $_POST['week_start_date'] ?? '';
         
-        $stmt->bind_param("iisiii", $userId, $anganwadiId, $weekStartDate, $totalPackets, $childrenPackets, $pregnantPackets);
+        // Get daily quantities (in PACKETS)
+        $monChildren = (int)($_POST['mon_children'] ?? 0);
+        $monPregnant = (int)($_POST['mon_pregnant'] ?? 0);
+        $tueChildren = (int)($_POST['tue_children'] ?? 0);
+        $tuePregnant = (int)($_POST['tue_pregnant'] ?? 0);
+        $wedChildren = (int)($_POST['wed_children'] ?? 0);
+        $wedPregnant = (int)($_POST['wed_pregnant'] ?? 0);
+        $thuChildren = (int)($_POST['thu_children'] ?? 0);
+        $thuPregnant = (int)($_POST['thu_pregnant'] ?? 0);
+        $friChildren = (int)($_POST['fri_children'] ?? 0);
+        $friPregnant = (int)($_POST['fri_pregnant'] ?? 0);
         
-        if ($stmt->execute()) {
-            $success = 'Order submitted successfully!';
+        // Calculate totals (all in PACKETS)
+        $monQty = $monChildren + $monPregnant;
+        $tueQty = $tueChildren + $tuePregnant;
+        $wedQty = $wedChildren + $wedPregnant;
+        $thuQty = $thuChildren + $thuPregnant;
+        $friQty = $friChildren + $friPregnant;
+        
+        $totalQty = $monQty + $tueQty + $wedQty + $thuQty + $friQty;
+        $childrenAllocation = $monChildren + $tueChildren + $wedChildren + $thuChildren + $friChildren;
+        $pregnantWomenAllocation = $monPregnant + $tuePregnant + $wedPregnant + $thuPregnant + $friPregnant;
+        
+        // Total bags is same as total packets (1 packet = 1 bag)
+        $totalBags = $totalQty;
+        
+        $remarks = $_POST['remarks'] ?? '';
+        
+        // Calculate week end date (Friday)
+        $weekEndDate = date('Y-m-d', strtotime($weekStartDate . ' +4 days'));
+        
+        if (empty($weekStartDate)) {
+            $error = 'Please select week start date';
+        } elseif (!$anganwadiId) {
+            $error = 'No Anganwadi assigned to your account. Please contact admin.';
+        } elseif ($totalQty <= 0) {
+            $error = 'Total packets must be greater than 0';
         } else {
-            $error = 'Failed to submit order: ' . $stmt->error;
+            // Check if order already exists for this week
+            $checkStmt = $db->prepare("SELECT id FROM weekly_orders WHERE anganwadi_id = ? AND week_start_date = ?");
+            $checkStmt->bind_param("is", $anganwadiId, $weekStartDate);
+            $checkStmt->execute();
+            $checkResult = $checkStmt->get_result();
+            
+            if ($checkResult->num_rows > 0) {
+                $error = 'Order already exists for this week. Please edit existing order or select different week.';
+            } else {
+                // Insert order
+                $stmt = $db->prepare("
+                    INSERT INTO weekly_orders (
+                        user_id, anganwadi_id, week_start_date, week_end_date,
+                        mon_qty, tue_qty, wed_qty, thu_qty, fri_qty,
+                        total_qty, children_allocation, pregnant_women_allocation, 
+                        total_bags, remarks, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                ");
+                
+                $stmt->bind_param(
+                    "iissiiiiiiiiis", 
+                    $userId, $anganwadiId, $weekStartDate, $weekEndDate,
+                    $monQty, $tueQty, $wedQty, $thuQty, $friQty,
+                    $totalQty, $childrenAllocation, $pregnantWomenAllocation,
+                    $totalBags, $remarks
+                );
+                
+                if ($stmt->execute()) {
+                    $orderId = $stmt->insert_id;
+                    
+                    // Log activity
+                    logActivity($db, $userId, 'order_created', 'weekly_orders', $orderId, null, 
+                                json_encode(['total_qty' => $totalQty, 'week' => $weekStartDate]));
+                    
+                    $success = 'Order submitted successfully! Order ID: ' . $orderId;
+                    
+                    // Clear form by redirecting
+                    // header('Location: order-history.php?success=1');
+                    // exit;
+                } else {
+                    $error = 'Failed to submit order: ' . $stmt->error;
+                }
+                $stmt->close();
+            }
+            $checkStmt->close();
         }
-        $stmt->close();
     }
 }
 
@@ -258,6 +355,12 @@ $pageTitle = "Submit Order";
             border-radius: 8px;
             margin-bottom: 20px;
         }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
     </style>
 </head>
 <body>
@@ -297,213 +400,221 @@ $pageTitle = "Submit Order";
         <div class="content-area">
             <?php if ($error): ?>
                 <div class="alert alert-danger alert-dismissible fade show">
-                    <i class="fas fa-exclamation-circle"></i> <?php echo $error; ?>
+                    <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
             
             <?php if ($success): ?>
                 <div class="alert alert-success alert-dismissible fade show">
-                    <i class="fas fa-check-circle"></i> <?php echo $success; ?>
+                    <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($success); ?>
                     <a href="order-history.php" class="alert-link">View Order History</a>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>
             
-            <!-- Anganwadi Info -->
-            <div class="info-box">
-                <strong><i class="fas fa-building"></i> <?php echo htmlspecialchars($anganwadi['name']?? 'N/A'); ?></strong><br>
-                <small>
-                    Code: <?php echo $anganwadi['aw_code']?? 'N/A'; ?> | 
-                    Children: <?php echo $anganwadi['total_children']?? 0; ?> | 
-                    Pregnant Women: <?php echo $anganwadi['pregnant_women']?? 0; ?>
-                </small>
-            </div>
-            
-            <form method="POST" id="orderForm">
-                <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
-                
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="card-custom">
-                            <div class="card-header-custom">
-                                <i class="fas fa-calendar-week"></i> Weekly Milk Order (in Packets)
-                            </div>
-                            <div class="card-body p-4">
-                                <!-- Week Selection -->
-                                <div class="mb-4">
-                                    <label class="form-label" style="font-weight: 700; font-size: 16px;">Select Week Start Date (Monday)</label>
-                                    <input type="date" class="form-control" name="week_start_date" 
-                                           id="weekStartDate" value="<?php echo $nextMonday; ?>" required>
-                                    <small class="text-muted">Select the Monday of the week for which you want to place order</small>
-                                </div>
-                                
-                                <!-- Daily Quantities -->
-                                <hr class="my-4">
-                                <h6 class="mb-3">Daily Quantities (in Packets)</h6>
-                                
-                                <!-- Monday -->
-                                <div class="day-input-group">
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <label class="day-label">
-                                                <i class="fas fa-calendar-day text-primary"></i> Monday
-                                            </label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="input-group-compact">
-                                                <label>Children:</label>
-                                                <input type="number" class="form-control children-qty" name="mon_children" 
-                                                       min="0" placeholder="0" required data-day="mon">
-                                                <label>Pregnant:</label>
-                                                <input type="number" class="form-control pregnant-qty" name="mon_pregnant" 
-                                                       min="0" placeholder="0" data-day="mon">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2 text-end">
-                                            <span class="day-total" id="mon-total">0 packets</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Tuesday -->
-                                <div class="day-input-group">
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <label class="day-label">
-                                                <i class="fas fa-calendar-day text-success"></i> Tuesday
-                                            </label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="input-group-compact">
-                                                <label>Children:</label>
-                                                <input type="number" class="form-control children-qty" name="tue_children" 
-                                                       min="0" placeholder="0" required data-day="tue">
-                                                <label>Pregnant:</label>
-                                                <input type="number" class="form-control pregnant-qty" name="tue_pregnant" 
-                                                       min="0" placeholder="0" data-day="tue">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2 text-end">
-                                            <span class="day-total" id="tue-total">0 packets</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Wednesday -->
-                                <div class="day-input-group">
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <label class="day-label">
-                                                <i class="fas fa-calendar-day text-warning"></i> Wednesday
-                                            </label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="input-group-compact">
-                                                <label>Children:</label>
-                                                <input type="number" class="form-control children-qty" name="wed_children" 
-                                                       min="0" placeholder="0" required data-day="wed">
-                                                <label>Pregnant:</label>
-                                                <input type="number" class="form-control pregnant-qty" name="wed_pregnant" 
-                                                       min="0" placeholder="0" data-day="wed">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2 text-end">
-                                            <span class="day-total" id="wed-total">0 packets</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Thursday -->
-                                <div class="day-input-group">
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <label class="day-label">
-                                                <i class="fas fa-calendar-day text-info"></i> Thursday
-                                            </label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="input-group-compact">
-                                                <label>Children:</label>
-                                                <input type="number" class="form-control children-qty" name="thu_children" 
-                                                       min="0" placeholder="0" required data-day="thu">
-                                                <label>Pregnant:</label>
-                                                <input type="number" class="form-control pregnant-qty" name="thu_pregnant" 
-                                                       min="0" placeholder="0" data-day="thu">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2 text-end">
-                                            <span class="day-total" id="thu-total">0 packets</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Friday -->
-                                <div class="day-input-group">
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <label class="day-label">
-                                                <i class="fas fa-calendar-day text-danger"></i> Friday
-                                            </label>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <div class="input-group-compact">
-                                                <label>Children:</label>
-                                                <input type="number" class="form-control children-qty" name="fri_children" 
-                                                       min="0" placeholder="0" required data-day="fri">
-                                                <label>Pregnant:</label>
-                                                <input type="number" class="form-control pregnant-qty" name="fri_pregnant" 
-                                                       min="0" placeholder="0" data-day="fri">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2 text-end">
-                                            <span class="day-total" id="fri-total">0 packets</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                 
-                                <!-- Remarks -->
-                                <div class="mb-3 mt-4">
-                                    <label class="form-label">Remarks (Optional)</label>
-                                    <textarea class="form-control" name="remarks" rows="3" 
-                                              placeholder="Any special instructions or remarks"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Summary Sidebar -->
-                    <div class="col-md-4">
-                        <div class="summary-box">
-                            <h5 class="mb-4"><i class="fas fa-calculator"></i> Order Summary</h5>
-                            
-                            <div class="summary-item">
-                                <span>Total Packets:</span>
-                                <strong id="summaryTotal">0</strong>
-                            </div>
-                            
-                            <div class="summary-item">
-                                <span>Children Packets:</span>
-                                <strong id="summaryChildren">0</strong>
-                            </div>
-                            
-                            <div class="summary-item">
-                                <span>Pregnant Women Packets:</span>
-                                <strong id="summaryPregnant">0</strong>
-                            </div>
-                            
-                            <div class="summary-item">
-                                <span>Week Period:</span>
-                                <strong id="summaryWeek">-</strong>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-submit mt-4">
-                                <i class="fas fa-paper-plane"></i> Submit Order
-                            </button>
-                        </div>
-                    </div>
+            <?php if (!$anganwadi): ?>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>No Anganwadi Assigned!</strong> 
+                    Your account is not linked to any Anganwadi. Please contact the administrator to assign an Anganwadi to your account.
                 </div>
-            </form>
+            <?php else: ?>
+                <!-- Anganwadi Info -->
+                <div class="info-box">
+                    <strong><i class="fas fa-building"></i> <?php echo htmlspecialchars($anganwadi['name']); ?></strong><br>
+                    <small>
+                        Code: <?php echo htmlspecialchars($anganwadi['aw_code']); ?> | 
+                        Children: <?php echo (int)$anganwadi['total_children']; ?> | 
+                        Pregnant Women: <?php echo (int)$anganwadi['pregnant_women']; ?>
+                    </small>
+                </div>
+                
+                <form method="POST" id="orderForm">
+                    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <i class="fas fa-calendar-week"></i> Weekly Milk Order (in Packets)
+                                </div>
+                                <div class="card-body p-4">
+                                    <!-- Week Selection -->
+                                    <div class="mb-4">
+                                        <label class="form-label" style="font-weight: 700; font-size: 16px;">Select Week Start Date (Monday)</label>
+                                        <input type="date" class="form-control" name="week_start_date" 
+                                               id="weekStartDate" value="<?php echo $nextMonday; ?>" required>
+                                        <small class="text-muted">Select the Monday of the week for which you want to place order</small>
+                                    </div>
+                                    
+                                    <!-- Daily Quantities -->
+                                    <hr class="my-4">
+                                    <h6 class="mb-3">Daily Quantities (in Packets)</h6>
+                                    
+                                    <!-- Monday -->
+                                    <div class="day-input-group">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <label class="day-label">
+                                                    <i class="fas fa-calendar-day text-primary"></i> Monday
+                                                </label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="input-group-compact">
+                                                    <label>Children:</label>
+                                                    <input type="number" class="form-control children-qty" name="mon_children" 
+                                                           min="0" placeholder="0" data-day="mon">
+                                                    <label>Pregnant:</label>
+                                                    <input type="number" class="form-control pregnant-qty" name="mon_pregnant" 
+                                                           min="0" placeholder="0" data-day="mon">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 text-end">
+                                                <span class="day-total" id="mon-total">0 packets</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Tuesday -->
+                                    <div class="day-input-group">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <label class="day-label">
+                                                    <i class="fas fa-calendar-day text-success"></i> Tuesday
+                                                </label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="input-group-compact">
+                                                    <label>Children:</label>
+                                                    <input type="number" class="form-control children-qty" name="tue_children" 
+                                                           min="0" placeholder="0" data-day="tue">
+                                                    <label>Pregnant:</label>
+                                                    <input type="number" class="form-control pregnant-qty" name="tue_pregnant" 
+                                                           min="0" placeholder="0" data-day="tue">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 text-end">
+                                                <span class="day-total" id="tue-total">0 packets</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Wednesday -->
+                                    <div class="day-input-group">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <label class="day-label">
+                                                    <i class="fas fa-calendar-day text-warning"></i> Wednesday
+                                                </label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="input-group-compact">
+                                                    <label>Children:</label>
+                                                    <input type="number" class="form-control children-qty" name="wed_children" 
+                                                           min="0" placeholder="0" data-day="wed">
+                                                    <label>Pregnant:</label>
+                                                    <input type="number" class="form-control pregnant-qty" name="wed_pregnant" 
+                                                           min="0" placeholder="0" data-day="wed">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 text-end">
+                                                <span class="day-total" id="wed-total">0 packets</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Thursday -->
+                                    <div class="day-input-group">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <label class="day-label">
+                                                    <i class="fas fa-calendar-day text-info"></i> Thursday
+                                                </label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="input-group-compact">
+                                                    <label>Children:</label>
+                                                    <input type="number" class="form-control children-qty" name="thu_children" 
+                                                           min="0" placeholder="0" data-day="thu">
+                                                    <label>Pregnant:</label>
+                                                    <input type="number" class="form-control pregnant-qty" name="thu_pregnant" 
+                                                           min="0" placeholder="0" data-day="thu">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 text-end">
+                                                <span class="day-total" id="thu-total">0 packets</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Friday -->
+                                    <div class="day-input-group">
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <label class="day-label">
+                                                    <i class="fas fa-calendar-day text-danger"></i> Friday
+                                                </label>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="input-group-compact">
+                                                    <label>Children:</label>
+                                                    <input type="number" class="form-control children-qty" name="fri_children" 
+                                                           min="0" placeholder="0" data-day="fri">
+                                                    <label>Pregnant:</label>
+                                                    <input type="number" class="form-control pregnant-qty" name="fri_pregnant" 
+                                                           min="0" placeholder="0" data-day="fri">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 text-end">
+                                                <span class="day-total" id="fri-total">0 packets</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                     
+                                    <!-- Remarks -->
+                                    <div class="mb-3 mt-4">
+                                        <label class="form-label">Remarks (Optional)</label>
+                                        <textarea class="form-control" name="remarks" rows="3" 
+                                                  placeholder="Any special instructions or remarks"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Summary Sidebar -->
+                        <div class="col-md-4">
+                            <div class="summary-box">
+                                <h5 class="mb-4"><i class="fas fa-calculator"></i> Order Summary</h5>
+                                
+                                <div class="summary-item">
+                                    <span>Total Packets:</span>
+                                    <strong id="summaryTotal">0</strong>
+                                </div>
+                                
+                                <div class="summary-item">
+                                    <span>Children Packets:</span>
+                                    <strong id="summaryChildren">0</strong>
+                                </div>
+                                
+                                <div class="summary-item">
+                                    <span>Pregnant Women Packets:</span>
+                                    <strong id="summaryPregnant">0</strong>
+                                </div>
+                                
+                                <div class="summary-item">
+                                    <span>Week Period:</span>
+                                    <strong id="summaryWeek">-</strong>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-submit mt-4">
+                                    <i class="fas fa-paper-plane"></i> Submit Order
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            <?php endif; ?>
         </div>
     </div>
     
@@ -556,7 +667,7 @@ $pageTitle = "Submit Order";
             });
         });
         
-        document.getElementById('weekStartDate').addEventListener('change', function() {
+        document.getElementById('weekStartDate')?.addEventListener('change', function() {
             updateSummary();
             // Ensure selected date is Monday
             const date = new Date(this.value);
@@ -567,7 +678,7 @@ $pageTitle = "Submit Order";
         });
         
         // Form validation
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
+        document.getElementById('orderForm')?.addEventListener('submit', function(e) {
             let total = 0;
             document.querySelectorAll('.children-qty, .pregnant-qty').forEach(input => {
                 total += parseInt(input.value) || 0;

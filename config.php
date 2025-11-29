@@ -158,19 +158,36 @@ function calculateBags($quantity) {
     return ceil(($quantity * 1000) / BAG_SIZE_ML);
 }
 
-function logActivity($userId, $action, $tableName = null, $recordId = null, $oldData = null, $newData = null) {
-    $db = getDB();
+function logActivity($db, $userId, $action, $tableName = null, $recordId = null, $oldData = null, $newData = null) {
+    // Validate parameters
+    if (!is_object($db) || !($db instanceof mysqli)) {
+        error_log("Invalid database object passed to logActivity");
+        return false;
+    }
+    
+    if (!is_numeric($userId)) {
+        error_log("Invalid userId passed to logActivity: " . print_r($userId, true));
+        return false;
+    }
     
     $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
     
     $stmt = $db->prepare("INSERT INTO activity_logs (user_id, action, table_name, record_id, old_data, new_data, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    
+    if (!$stmt) {
+        error_log("Failed to prepare statement: " . $db->error);
+        return false;
+    }
+    
     $oldDataJson = $oldData ? json_encode($oldData) : null;
     $newDataJson = $newData ? json_encode($newData) : null;
     
     $stmt->bind_param("isssisss", $userId, $action, $tableName, $recordId, $oldDataJson, $newDataJson, $ipAddress, $userAgent);
-    $stmt->execute();
+    $result = $stmt->execute();
     $stmt->close();
+    
+    return $result;
 }
 
 function getSetting($key, $default = null) {
@@ -181,9 +198,11 @@ function getSetting($key, $default = null) {
     $result = $stmt->get_result();
     
     if ($row = $result->fetch_assoc()) {
+        $stmt->close();
         return $row['setting_value'];
     }
     
+    $stmt->close();
     return $default;
 }
 

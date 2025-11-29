@@ -363,28 +363,28 @@ $pageTitle = "Review Order";
                             <div class="daily-breakdown">
                                 <div class="day-card">
                                     <div class="day-name"><i class="fas fa-calendar-day text-primary"></i> MON</div>
-                                    <div class="day-qty"><?php echo number_format($order['mon_qty'], 1); ?></div>
-                                    <div class="day-unit">Liters</div>
+                                    <div class="day-qty"><?php echo number_format($order['mon_qty'], 0); ?></div>
+                                    <div class="day-unit">Packets</div>
                                 </div>
                                 <div class="day-card">
                                     <div class="day-name"><i class="fas fa-calendar-day text-success"></i> TUE</div>
-                                    <div class="day-qty"><?php echo number_format($order['tue_qty'], 1); ?></div>
-                                    <div class="day-unit">Liters</div>
+                                    <div class="day-qty"><?php echo number_format($order['tue_qty'], 0); ?></div>
+                                    <div class="day-unit">Packets</div>
                                 </div>
                                 <div class="day-card">
                                     <div class="day-name"><i class="fas fa-calendar-day text-warning"></i> WED</div>
-                                    <div class="day-qty"><?php echo number_format($order['wed_qty'], 1); ?></div>
-                                    <div class="day-unit">Liters</div>
+                                    <div class="day-qty"><?php echo number_format($order['wed_qty'], 0); ?></div>
+                                    <div class="day-unit">Packets</div>
                                 </div>
                                 <div class="day-card">
                                     <div class="day-name"><i class="fas fa-calendar-day text-info"></i> THU</div>
-                                    <div class="day-qty"><?php echo number_format($order['thu_qty'], 1); ?></div>
-                                    <div class="day-unit">Liters</div>
+                                    <div class="day-qty"><?php echo number_format($order['thu_qty'], 0); ?></div>
+                                    <div class="day-unit">Packets</div>
                                 </div>
                                 <div class="day-card">
                                     <div class="day-name"><i class="fas fa-calendar-day text-danger"></i> FRI</div>
-                                    <div class="day-qty"><?php echo number_format($order['fri_qty'], 1); ?></div>
-                                    <div class="day-unit">Liters</div>
+                                    <div class="day-qty"><?php echo number_format($order['fri_qty'], 0); ?></div>
+                                    <div class="day-unit">Packets</div>
                                 </div>
                             </div>
                         </div>
@@ -397,11 +397,11 @@ $pageTitle = "Review Order";
                             <div class="info-grid">
                                 <div class="info-item">
                                     <span class="info-label">Children Allocation</span>
-                                    <span class="info-value"><?php echo number_format($order['children_allocation'], 2); ?> Liters</span>
+                                    <span class="info-value"><?php echo number_format($order['children_allocation'], 0); ?> Packets</span>
                                 </div>
                                 <div class="info-item">
                                     <span class="info-label">Pregnant Women Allocation</span>
-                                    <span class="info-value"><?php echo number_format($order['pregnant_women_allocation'], 2); ?> Liters</span>
+                                    <span class="info-value"><?php echo number_format($order['pregnant_women_allocation'], 0); ?> Packets</span>
                                 </div>
                             </div>
                         </div>
@@ -448,8 +448,8 @@ $pageTitle = "Review Order";
                         
                         <div class="summary-box">
                             <div class="summary-item">
-                                <span>Total Quantity:</span>
-                                <strong><?php echo number_format($order['total_qty'], 2); ?> L</strong>
+                                <span>Total Packets:</span>
+                                <strong><?php echo number_format($order['total_qty'], 0); ?></strong>
                             </div>
                             <div class="summary-item">
                                 <span>Total Bags:</span>
