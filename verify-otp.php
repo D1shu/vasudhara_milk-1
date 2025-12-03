@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .otp-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 50px 30px;
+            padding: 30px 20px;
             text-align: center;
             position: relative;
         }
@@ -151,8 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .otp-header i {
-            font-size: 60px;
-            margin-bottom: 20px;
+            font-size: 40px;
+            margin-bottom: 15px;
             display: block;
             animation: float 3s ease-in-out infinite;
         }
@@ -163,19 +163,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .otp-header h2 {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
         }
-        
+
         .otp-header p {
-            font-size: 15px;
+            font-size: 14px;
             opacity: 0.95;
             margin: 0;
         }
         
         .otp-body {
-            padding: 50px 40px;
+            padding: 30px 30px;
         }
         
         .otp-info-box {

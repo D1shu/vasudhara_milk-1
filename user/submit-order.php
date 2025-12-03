@@ -177,17 +177,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($error)) {
-            // Insert into weekly_orders using mon_qty..fri_qty and per-day children/pregnant and totals
+            // Insert into weekly_orders using mon_qty..fri_qty and totals
             $stmt = $db->prepare("
-                INSERT INTO weekly_orders 
-                    (user_id, anganwadi_id, week_start_date, week_end_date, 
+                INSERT INTO weekly_orders
+                    (user_id, anganwadi_id, week_start_date, week_end_date,
                      mon_qty, tue_qty, wed_qty, thu_qty, fri_qty,
-                     mon_children, mon_pregnant, tue_children, tue_pregnant,
-                     wed_children, wed_pregnant, thu_children, thu_pregnant,
-                     fri_children, fri_pregnant,
                      total_qty, children_allocation, pregnant_women_allocation, total_bags,
                      remarks, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
             ");
 
             // compute week_end_date as +4 days (Mon - Fri)
@@ -219,27 +216,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $children_allocation = (int)$total_children;
             $pregnant_allocation = (int)$total_pregnant;
 
-            // build types string (24 params)
-            $types = "iiss" . str_repeat("i", 19) . "s"; // i i s s + 19 i's + s = 24 params
+            // build types string (14 params)
+            $types = "iissiiiiiiiiis"; // i i s s i i i i i i i i i i s
 
             $bindParams = [
                 $userId, $anganwadiId, $weekStartDate, $weekEnd,
                 $mon, $tue, $wed, $thu, $fri,
-                $mon_children, $mon_pregnant, $tue_children, $tue_pregnant,
-                $wed_children, $wed_pregnant, $thu_children, $thu_pregnant,
-                $fri_children, $fri_pregnant,
                 $total_qty, $children_allocation, $pregnant_allocation, $total_bags,
                 $remarks
             ];
 
-            // Use call_user_func_array to bind dynamic params
-            $refs = [];
-            $refs[] = &$types;
-            for ($i = 0; $i < count($bindParams); $i++) {
-                $refs[] = &$bindParams[$i];
-            }
-            // bind
-            call_user_func_array([$stmt, 'bind_param'], $refs);
+            // Bind parameters using spread operator
+            $stmt->bind_param($types, ...$bindParams);
 
             if ($stmt->execute()) {
                 $success = 'Order submitted successfully!';
@@ -337,12 +325,14 @@ $pageTitle = "Submit Order";
         .form-control, .form-select{ border:2px solid #eef2ff; border-radius:10px; padding:8px 12px; transition: all .18s; font-size:14px; }
         .form-control:focus, .form-select:focus{ border-color:var(--primary-500); box-shadow: 0 8px 20px rgba(102,126,234,0.08); outline: none; }
 
-        .day-input-group{ background:#fff; border-radius:10px; padding:12px; margin-bottom:12px; border:1px solid #f1f5f9; display:block; }
+        .day-input-group{ background:#fff; border-radius:10px; padding:12px; margin-bottom:12px; border:1px solid #f1f5f9; display:block; transition: all 0.2s ease; }
+        .day-input-group:hover{ border-color: var(--primary-500); box-shadow: 0 2px 8px rgba(102,126,234,0.1); }
         .day-label{ font-weight:700; margin-bottom:0; font-size:15px; display:flex; align-items:center; gap:8px; }
 
         .input-group-compact{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
         .input-group-compact label{ font-size:13px; color:var(--muted); margin:0; white-space:nowrap; }
-        .input-group-compact input[type="number"]{ width:90px; padding:6px 8px; border-radius:8px; border:1px solid #e6eefb; }
+        .input-group-compact input[type="number"]{ width:90px; padding:6px 8px; border-radius:8px; border:1px solid #e6eefb; transition: all 0.2s ease; }
+        .input-group-compact input[type="number"]:focus{ border-color: var(--primary-500); box-shadow: 0 0 0 3px rgba(102,126,234,0.1); outline: none; }
 
         .day-total{ font-weight:700; color:var(--primary-500); font-size:15px; }
 
@@ -490,15 +480,15 @@ $pageTitle = "Submit Order";
                                     <!-- Monday -->
                                     <div class="day-input-group" aria-labelledby="mon-label">
                                         <div class="row align-items-center">
-                                            <div class="col-12 col-md-2">
+                                            <div class="col-12 col-md-3">
                                                 <label id="mon-label" class="day-label"><i class="fas fa-calendar-day text-primary"></i> Monday</label>
                                             </div>
-                                            <div class="col-12 col-md-8">
+                                            <div class="col-12 col-md-7">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
                                                     <input type="number" class="form-control children-qty" name="mon_children" min="0" value="" required data-day="mon">
-                                                    <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="mon_pregnant" min="0" value="" data-day="mon">
+                                                    
+                                        
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -510,15 +500,15 @@ $pageTitle = "Submit Order";
                                     <!-- Tuesday -->
                                     <div class="day-input-group" aria-labelledby="tue-label">
                                         <div class="row align-items-center">
-                                            <div class="col-12 col-md-2">
+                                            <div class="col-12 col-md-3">
                                                 <label id="tue-label" class="day-label"><i class="fas fa-calendar-day text-success"></i> Tuesday</label>
                                             </div>
-                                            <div class="col-12 col-md-8">
+                                            <div class="col-12 col-md-7">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
                                                     <input type="number" class="form-control children-qty" name="tue_children" min="0" value="" required data-day="tue">
-                                                    <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="tue_pregnant" min="0" value="" data-day="tue">
+                                                    
+                                    
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -530,10 +520,10 @@ $pageTitle = "Submit Order";
                                     <!-- Wednesday -->
                                     <div class="day-input-group" aria-labelledby="wed-label">
                                         <div class="row align-items-center">
-                                            <div class="col-12 col-md-2">
+                                            <div class="col-12 col-md-3">
                                                 <label id="wed-label" class="day-label"><i class="fas fa-calendar-day text-warning"></i> Wednesday</label>
                                             </div>
-                                            <div class="col-12 col-md-8">
+                                            <div class="col-12 col-md-7">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
                                                     <input type="number" class="form-control children-qty" name="wed_children" min="0" value="" required data-day="wed">
@@ -550,15 +540,15 @@ $pageTitle = "Submit Order";
                                     <!-- Thursday -->
                                     <div class="day-input-group" aria-labelledby="thu-label">
                                         <div class="row align-items-center">
-                                            <div class="col-12 col-md-2">
+                                            <div class="col-12 col-md-3">
                                                 <label id="thu-label" class="day-label"><i class="fas fa-calendar-day text-info"></i> Thursday</label>
                                             </div>
-                                            <div class="col-12 col-md-8">
+                                            <div class="col-12 col-md-7">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
                                                     <input type="number" class="form-control children-qty" name="thu_children" min="0" value="" required data-day="thu">
-                                                    <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="thu_pregnant" min="0" value="" data-day="thu">
+                                                    
+                                
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -570,15 +560,15 @@ $pageTitle = "Submit Order";
                                     <!-- Friday -->
                                     <div class="day-input-group" aria-labelledby="fri-label">
                                         <div class="row align-items-center">
-                                            <div class="col-12 col-md-2">
+                                            <div class="col-12 col-md-3">
                                                 <label id="fri-label" class="day-label"><i class="fas fa-calendar-day text-danger"></i> Friday</label>
                                             </div>
-                                            <div class="col-12 col-md-8">
+                                            <div class="col-12 col-md-7">
                                                 <div class="input-group-compact">
                                                     <label>Children:</label>
-                                                    <input type="number" class="form-control children-qty" name="fri_children" min="0" value="0" required data-day="fri">
+                                                    <input type="number" class="form-control children-qty" name="fri_children" min="0" value="" required data-day="fri">
                                                     <label>Pregnant:</label>
-                                                    <input type="number" class="form-control pregnant-qty" name="fri_pregnant" min="0" value="0" data-day="fri">
+                                                    <input type="number" class="form-control pregnant-qty" name="fri_pregnant" min="0" value="" data-day="fri">
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">

@@ -338,10 +338,10 @@ $csrfToken = generateCSRFToken();
                     // Get recent orders summary
                     $db = getDB();
                     $stmt = $db->prepare("
-                        SELECT 
+                        SELECT
                             DATE(o.delivery_date) as order_date,
                             COUNT(o.id) as total_orders,
-                            SUM(o.quantity) as total_quantity,
+                            SUM(o.quantity * 2) as total_quantity,
                             SUM(o.total_price) as total_amount
                         FROM orders o
                         WHERE o.delivery_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
@@ -359,7 +359,7 @@ $csrfToken = generateCSRFToken();
                             <tr>
                                 <th>Date</th>
                                 <th>Total Orders</th>
-                                <th>Quantity (L)</th>
+                                <th>Quantity (Packets)</th>
                                 <th>Amount (₹)</th>
                             </tr>
                         </thead>

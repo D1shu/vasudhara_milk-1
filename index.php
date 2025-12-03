@@ -19,6 +19,7 @@ if (Auth::isLoggedIn()) {
     <title>Welcome - <?php echo SITE_NAME; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
         :root {
             --primary-color: #667eea;
@@ -256,7 +257,7 @@ if (Auth::isLoggedIn()) {
                     </div>
                 </div>
                 <div class="col-lg-6 text-center d-none d-lg-block">
-                    <i class="fas fa-truck fa-10x" style="opacity: 0.2;"></i>
+                    <div id="loading-car-animation" style="width: 400px; height: 400px; margin: 0 auto;"></div>
                 </div>
             </div>
         </div>
@@ -433,6 +434,15 @@ if (Auth::isLoggedIn()) {
                     });
                 }
             });
+        });
+
+        // Load Lottie animation
+        lottie.loadAnimation({
+            container: document.getElementById('loading-car-animation'),
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            path: 'Loading_car.json'
         });
     </script>
 </body>

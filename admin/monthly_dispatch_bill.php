@@ -13,7 +13,7 @@ $endDate = $_GET['end_date'] ?? '';
 $districtId = $_GET['district_id'] ?? '';
 $talukaId = $_GET['taluka_id'] ?? '';
 $gharakId = $_GET['gharak_id'] ?? '';
-$ratePerLiter = isset($_GET['rate']) && $_GET['rate'] > 0 ? floatval($_GET['rate']) : 0;
+$ratePerPacket = isset($_GET['rate']) && $_GET['rate'] > 0 ? floatval($_GET['rate']) : 0;
 $gstPercent = isset($_GET['gst']) ? floatval($_GET['gst']) : 5.00;
 
 // Get data for dropdowns
@@ -38,7 +38,7 @@ if ($startDate && $endDate) {
             t.name as taluka_name,
             d.name as district_name,
             COALESCE(SUM(wo.total_qty), 0) as total_quantity,
-            COALESCE(SUM(wo.total_qty * $ratePerLiter), 0) as total_amount,
+            COALESCE(SUM(wo.total_qty * $ratePerPacket), 0) as total_amount,
             COUNT(wo.id) as order_count
         FROM anganwadi a
         LEFT JOIN weekly_orders wo ON a.id = wo.anganwadi_id 
@@ -342,6 +342,13 @@ $csrfToken = generateCSRFToken();
     </style>
 </head>
 <body>
+    <!-- Navigation -->
+    <div class="mb-3 no-print">
+        <a href="reports.php" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Reports
+        </a>
+    </div>
+
     <!-- Filter Card -->
     <div class="filter-card no-print">
         <h4 class="mb-4"><i class="fas fa-filter"></i> Generate Monthly Dispatch Bill Report</h4>
@@ -387,9 +394,9 @@ $csrfToken = generateCSRFToken();
                 </div>
                 
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">Rate per Liter (₹) *</label>
+                    <label class="form-label">Rate per Packet (₹) *</label>
                     <input type="number" class="form-control" name="rate" 
-                           value="<?php echo $ratePerLiter > 0 ? $ratePerLiter : ''; ?>" 
+                           value="<?php echo $ratePerPacket > 0 ? $ratePerPacket : ''; ?>"
                            min="0" step="0.01" placeholder="Enter rate" required>
                 </div>
                 
@@ -467,9 +474,9 @@ $csrfToken = generateCSRFToken();
                 </div>
                 
                 <div class="filter-item">
-                    <label>Rate per Liter:</label>
+                    <label>Rate per Packet:</label>
                     <div class="value">
-                        <span class="rate-badge">₹<?php echo number_format($ratePerLiter, 2); ?></span>
+                        <span class="rate-badge">₹<?php echo number_format($ratePerPacket, 2); ?></span>
                     </div>
                 </div>
                 
@@ -500,8 +507,8 @@ $csrfToken = generateCSRFToken();
                         <th style="width: 25%;">Anganwadi/School Name</th>
                         <th style="width: 15%;">Village</th>
                         <th style="width: 10%;">Type</th>
-                        <th style="width: 12%;">Quantity (L)</th>
-                        <th style="width: 12%;">Rate (₹/L)</th>
+                        <th style="width: 12%;">Quantity (P)</th>
+                        <th style="width: 12%;">Rate (₹/P)</th>
                         <th style="width: 15%;">Amount (₹)</th>
                     </tr>
                 </thead>
@@ -523,7 +530,7 @@ $csrfToken = generateCSRFToken();
                                 </span>
                             </td>
                             <td class="text-end"><?php echo number_format($quantity, 2); ?></td>
-                            <td class="text-end">₹<?php echo number_format($ratePerLiter, 2); ?></td>
+                            <td class="text-end">₹<?php echo number_format($ratePerPacket, 2); ?></td>
                             <td class="text-end">₹<?php echo number_format($amount, 2); ?></td>
                         </tr>
                     <?php endforeach; ?>
