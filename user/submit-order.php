@@ -151,30 +151,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'No Anganwadi linked to your account. Contact admin.';
         } elseif ($total_qty <= 0) {
             $error = 'Please enter quantity for at least one day.';
+        } else {
+            $maxChildren = (int)($anganwadi['total_children'] ?? 0);
+            $maxPregnant = (int)($anganwadi['pregnant_women'] ?? 0);
+            $dayNames = ['mon' => 'Monday', 'tue' => 'Tuesday', 'wed' => 'Wednesday', 'thu' => 'Thursday', 'fri' => 'Friday'];
+            foreach ($days as $day) {
+                if ($day_children[$day] > $maxChildren) {
+                    $error = 'Children on ' . $dayNames[$day] . ' (' . $day_children[$day] . ') exceed the number present in Anganwadi (' . $maxChildren . ').';
+                    break;
+                }
+                if ($day_pregnant[$day] > $maxPregnant) {
+                    $error = 'Pregnant women on ' . $dayNames[$day] . ' (' . $day_pregnant[$day] . ') exceed the number present in Anganwadi (' . $maxPregnant . ').';
+                    break;
+                }
+            }
         }
 
         // remarks optional
         $remarks = trim($_POST['remarks'] ?? '');
-
-        // Confirmation flags sent by JS when user confirms overflow prompts
-        $confirm_children = isset($_POST['confirm_overflow_children']) && $_POST['confirm_overflow_children'] === '1';
-        $confirm_pregnant = isset($_POST['confirm_overflow_pregnant']) && $_POST['confirm_overflow_pregnant'] === '1';
-
-        // Server-side overflow checks (prevent silent bypass)
-        if (empty($error) && $anganwadi) {
-            $reg_children = (int)($anganwadi['total_children'] ?? 0);
-            $reg_pregnant = (int)($anganwadi['pregnant_women'] ?? 0);
-
-            if ($reg_children > 0 && $total_children > $reg_children && !$confirm_children) {
-                // user ordered more child packets than registered children, require explicit confirmation
-                $error = "You ordered more child packets ({$total_children}) than registered Total Children ({$reg_children}). Please confirm to proceed.";
-            }
-
-            // For pregnant: allowed to be zero; but if user orders more than registered pregnant, ask confirm
-            if (empty($error) && $reg_pregnant > 0 && $total_pregnant > $reg_pregnant && !$confirm_pregnant) {
-                $error = "You ordered more pregnant-women packets ({$total_pregnant}) than registered Pregnant Women ({$reg_pregnant}). Please confirm to proceed.";
-            }
-        }
 
         if (empty($error)) {
             // Insert into weekly_orders using mon_qty..fri_qty and totals
@@ -199,13 +193,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // per-day children/pregnant
             $mon_children = (int)$day_children['mon'];
-            $mon_pregnant = (int)$day_pregnant['mon'];
+            
             $tue_children = (int)$day_children['tue'];
-            $tue_pregnant = (int)$day_pregnant['tue'];
+
             $wed_children = (int)$day_children['wed'];
             $wed_pregnant = (int)$day_pregnant['wed'];
+
             $thu_children = (int)$day_children['thu'];
-            $thu_pregnant = (int)$day_pregnant['thu'];
+
             $fri_children = (int)$day_children['fri'];
             $fri_pregnant = (int)$day_pregnant['fri'];
 
@@ -456,8 +451,8 @@ $pageTitle = "Submit Order";
 
                 <form method="POST" id="orderForm" novalidate>
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
-                    <input type="hidden" name="confirm_overflow_children" id="confirm_overflow_children" value="0">
-                    <input type="hidden" name="confirm_overflow_pregnant" id="confirm_overflow_pregnant" value="0">
+                    <input type="hidden" id="max_children" value="<?php echo (int)($anganwadi['total_children'] ?? 0); ?>">
+                    <input type="hidden" id="max_pregnant" value="<?php echo (int)($anganwadi['pregnant_women'] ?? 0); ?>">
 
                     <div class="row">
                         <div class="col-md-8">
@@ -488,7 +483,6 @@ $pageTitle = "Submit Order";
                                                     <label>Children:</label>
                                                     <input type="number" class="form-control children-qty" name="mon_children" min="0" value="" required data-day="mon">
                                                     
-                                        
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -508,7 +502,6 @@ $pageTitle = "Submit Order";
                                                     <label>Children:</label>
                                                     <input type="number" class="form-control children-qty" name="tue_children" min="0" value="" required data-day="tue">
                                                     
-                                    
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -548,7 +541,6 @@ $pageTitle = "Submit Order";
                                                     <label>Children:</label>
                                                     <input type="number" class="form-control children-qty" name="thu_children" min="0" value="" required data-day="thu">
                                                     
-                                
                                                 </div>
                                             </div>
                                             <div class="col-12 col-md-2 text-end">
@@ -662,7 +654,8 @@ $pageTitle = "Submit Order";
         // Calculate day total
         function updateDayTotal(day) {
             const children = parseInt(document.querySelector(`input[name="${day}_children"]`).value) || 0;
-            const pregnant = parseInt(document.querySelector(`input[name="${day}_pregnant"]`).value) || 0;
+            const pregnantInput = document.querySelector(`input[name="${day}_pregnant"]`);
+            const pregnant = pregnantInput ? parseInt(pregnantInput.value) || 0 : 0;
             const total = children + pregnant;
             const el = document.getElementById(`${day}-total`);
             if (el) el.textContent = total + ' packets';
@@ -716,14 +709,14 @@ $pageTitle = "Submit Order";
                 // Ensure selected date is Monday (JS check)
                 const date = new Date(this.value);
                 if (this.value && date.getDay() !== 1) {
-                    alert('Please select a Monday as week start date');
+                    alert('Please select Monday as the week start date.');
                     this.value = '';
                     document.getElementById('summaryWeek').textContent = '-';
                 }
             });
         }
 
-        // Form validation + overflow confirmations (keeps your logic)
+        // Form validation
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             let totalChildren = 0;
             let totalPregnant = 0;
@@ -733,50 +726,34 @@ $pageTitle = "Submit Order";
 
             if (total === 0) {
                 e.preventDefault();
-                alert('Please enter quantity for at least one day');
+                alert('Please enter quantity for at least one day.');
                 return false;
             }
 
-            // Registered values from server-side anganwadi (injected safely)
-            const regChildren = <?php echo (int)($anganwadi['total_children'] ?? 0); ?>;
-            const regPregnant = <?php echo (int)($anganwadi['pregnant_women'] ?? 0); ?>;
+            const maxChildren = parseInt(document.getElementById('max_children').value) || 0;
+            const maxPregnant = parseInt(document.getElementById('max_pregnant').value) || 0;
+            const dayNames = {mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday'};
+            const days = ['mon','tue','wed','thu','fri'];
 
-            // Reset hidden confirms
-            document.getElementById('confirm_overflow_children').value = '0';
-            document.getElementById('confirm_overflow_pregnant').value = '0';
+            for (let day of days) {
+                const children = parseInt(document.querySelector(`input[name="${day}_children"]`).value) || 0;
+                const pregnantInput = document.querySelector(`input[name="${day}_pregnant"]`);
+                const pregnant = pregnantInput ? parseInt(pregnantInput.value) || 0 : 0;
 
-            // If children overflow, show confirm
-            if (regChildren > 0 && totalChildren > regChildren) {
-                const ok = confirm('You ordered ' + totalChildren + ' child packets which is more than your Total Children (' + regChildren + '). Do you want to continue?');
-                if (!ok) {
+                if (children > maxChildren) {
                     e.preventDefault();
+                    alert(`Children on ${dayNames[day]} (${children}) exceed the number present in Anganwadi (${maxChildren}).`);
                     return false;
-                } else {
-                    document.getElementById('confirm_overflow_children').value = '1';
+                }
+
+                if (pregnant > maxPregnant) {
+                    e.preventDefault();
+                    alert(`Pregnant women on ${dayNames[day]} (${pregnant}) exceed the number present in Anganwadi (${maxPregnant}).`);
+                    return false;
                 }
             }
 
-            // If pregnant overflow and registered pregnant > 0, show confirm
-            if (regPregnant > 0 && totalPregnant > regPregnant) {
-                const ok2 = confirm('You ordered ' + totalPregnant + ' pregnant-women packets which is more than registered Pregnant Women (' + regPregnant + '). Do you want to continue?');
-                if (!ok2) {
-                    e.preventDefault();
-                    return false;
-                } else {
-                    document.getElementById('confirm_overflow_pregnant').value = '1';
-                }
-            } else if (regPregnant === 0 && totalPregnant > 0) {
-                // If registered pregnant = 0 but user orders pregnant packets, show informational confirm
-                const ok3 = confirm('Registered Pregnant Women is 0 for this Anganwadi, but you entered ' + totalPregnant + ' pregnant packets. Do you want to continue?');
-                if (!ok3) {
-                    e.preventDefault();
-                    return false;
-                } else {
-                    document.getElementById('confirm_overflow_pregnant').value = '1';
-                }
-            }
-
-            // allow submit to proceed if all good (server will re-check)
+            // allow submit to proceed
         });
 
         // Initialize totals
