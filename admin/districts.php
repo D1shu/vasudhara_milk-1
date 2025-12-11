@@ -67,15 +67,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // Get all districts with counts
 $db = getDB();
 $result = $db->query("
-    SELECT d.*, 
+    SELECT d.*,
            (SELECT COUNT(*) FROM talukas WHERE district_id = d.id AND status = 'active') as taluka_count,
-           (SELECT COUNT(*) FROM villages v 
-            JOIN talukas t ON v.taluka_id = t.id 
+           (SELECT COUNT(*) FROM villages v
+            JOIN talukas t ON v.taluka_id = t.id
             WHERE t.district_id = d.id AND v.status = 'active') as village_count
-    FROM districts d 
-    WHERE d.status = 'active' 
+    FROM districts d
+    WHERE d.status = 'active'
     ORDER BY d.name
 ");
+
+if (!$result) {
+    die("Database query failed: " . $db->error);
+}
+
 $districts = [];
 while ($row = $result->fetch_assoc()) {
     $districts[] = $row;

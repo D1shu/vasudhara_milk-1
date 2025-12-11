@@ -128,22 +128,21 @@ class Auth {
      */
     public static function getUserByMobile($mobile) {
         $db = getDB();
-        
+
         $mobile = preg_replace('/[^0-9]/', '', $mobile);
-        
+
         $stmt = $db->prepare("
-            SELECT u.*, a.name as anganwadi_name, a.aw_code, a.type as anganwadi_type
+            SELECT u.*
             FROM users u
-            LEFT JOIN anganwadi a ON u.anganwadi_id = a.id
             WHERE u.mobile = ? AND u.status = 'active'
         ");
         $stmt->bind_param("s", $mobile);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         $user = $result->fetch_assoc();
         $stmt->close();
-        
+
         return $user;
     }
     
@@ -155,18 +154,16 @@ class Auth {
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_mobile'] = $user['mobile'];
         $_SESSION['user_role'] = $user['role'];
-        $_SESSION['anganwadi_id'] = $user['anganwadi_id'];
-        $_SESSION['anganwadi_name'] = $user['anganwadi_name'] ?? null;
         $_SESSION['logged_in'] = true;
         $_SESSION['last_activity'] = time();
-        
+
         // Update last login
         $db = getDB();
         $stmt = $db->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
         $stmt->bind_param("i", $user['id']);
         $stmt->execute();
         $stmt->close();
-        
+
         // Log activity
         logActivity($user['id'], 'LOGIN', 'users', $user['id']);
     }

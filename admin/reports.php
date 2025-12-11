@@ -290,6 +290,37 @@ $csrfToken = generateCSRFToken();
                     </div>
                 </div>
                 
+                <!-- Rate-wise Order Report -->
+                <div class="col-md-6 mb-4">
+                    <div class="report-card">
+                        <div class="report-icon icon-blue">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <h5>Rate-wise Order Report</h5>
+                        <p class="text-muted mb-3">View all orders for a specific time period and rate</p>
+
+                        <form method="GET" action="rate_wise_orders.php" target="_blank">
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" name="start_date" required>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" class="form-control" name="end_date" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Rate per Packet (₹)</label>
+                                <input type="number" class="form-control" name="rate" step="0.01" min="0" required placeholder="e.g., 12.00">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-list"></i> View Orders
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Anganwadi-wise Report -->
                 <div class="col-md-6 mb-4">
                     <div class="report-card">
@@ -298,7 +329,7 @@ $csrfToken = generateCSRFToken();
                         </div>
                         <h5>Anganwadi-wise Report</h5>
                         <p class="text-muted mb-3">Detailed consumption report for specific anganwadi/school</p>
-                        
+
                         <form method="GET" action="generate_anganwadi_report.php" target="_blank">
                             <div class="mb-3">
                                 <label class="form-label">Select Anganwadi</label>
@@ -333,7 +364,7 @@ $csrfToken = generateCSRFToken();
             <div class="card-custom">
                 <div class="card-body">
                     <h5 class="mb-3"><i class="fas fa-chart-bar text-primary"></i> Recent Orders Summary</h5>
-                    
+
                     <?php
                     // Get recent orders summary
                     $db = getDB();
@@ -353,7 +384,7 @@ $csrfToken = generateCSRFToken();
                     $recentOrders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     $stmt->close();
                     ?>
-                    
+
                     <table class="table table-striped">
                         <thead>
                             <tr>
@@ -380,6 +411,89 @@ $csrfToken = generateCSRFToken();
                             <?php endif; ?>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Navsari District Data Card -->
+            <div class="card-custom">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="fas fa-map-marker-alt text-success"></i> Navsari District Data (Villages, Schools & Anganwadis)</h5>
+
+                    <?php
+                    // Get Navsari district data
+                    $db = getDB();
+                    $stmt = $db->prepare("
+                        SELECT
+                            d.name as district,
+                            t.name as taluka,
+                            v.name as village,
+                            a.aw_code,
+                            a.name as anganwadi_name,
+                            a.type,
+                            a.contact_person,
+                            a.mobile,
+                            a.total_children,
+                            a.pregnant_women
+                        FROM districts d
+                        JOIN talukas t ON d.id = t.district_id
+                        JOIN villages v ON t.id = v.taluka_id
+                        JOIN anganwadi a ON v.id = a.village_id
+                        WHERE d.name = 'Navsari' AND a.status = 'active'
+                        ORDER BY d.name, t.name, v.name, a.name
+                    ");
+                    $stmt->execute();
+                    $navsariData = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                    $stmt->close();
+                    ?>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>District</th>
+                                    <th>Taluka</th>
+                                    <th>Village</th>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Contact Person</th>
+                                    <th>Mobile</th>
+                                    <th>Children</th>
+                                    <th>Pregnant Women</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($navsariData)): ?>
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted">No data found for Navsari district</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($navsariData as $data): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($data['district']); ?></td>
+                                        <td><?php echo htmlspecialchars($data['taluka']); ?></td>
+                                        <td><?php echo htmlspecialchars($data['village']); ?></td>
+                                        <td><?php echo htmlspecialchars($data['aw_code']); ?></td>
+                                        <td><?php echo htmlspecialchars($data['anganwadi_name']); ?></td>
+                                        <td>
+                                            <span class="badge bg-<?php echo $data['type'] == 'anganwadi' ? 'primary' : 'success'; ?>">
+                                                <?php echo ucfirst($data['type']); ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($data['contact_person'] ?: '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($data['mobile'] ?: '-'); ?></td>
+                                        <td><?php echo $data['total_children'] ?: '-'; ?></td>
+                                        <td><?php echo $data['pregnant_women'] ?: '-'; ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 text-muted">
+                        <small>Total Records: <?php echo count($navsariData); ?></small>
+                    </div>
                 </div>
             </div>
         </div>

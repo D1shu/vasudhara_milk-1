@@ -29,7 +29,7 @@ if ($startDate && $endDate) {
     $filterApplied = true;
     
     $query = "
-        SELECT 
+        SELECT
             a.id,
             a.aw_code,
             a.name as anganwadi_name,
@@ -38,13 +38,25 @@ if ($startDate && $endDate) {
             t.name as taluka_name,
             d.name as district_name,
             COALESCE(SUM(wo.total_qty), 0) as total_quantity,
-            COALESCE(SUM(wo.total_qty * $ratePerPacket), 0) as total_amount,
+            COALESCE(SUM(wo.total_qty * COALESCE(r.rate_per_packet, 0)), 0) as total_amount,
+            COALESCE(AVG(r.rate_per_packet), 0) as avg_rate_per_packet,
             COUNT(wo.id) as order_count
         FROM anganwadi a
-        LEFT JOIN weekly_orders wo ON a.id = wo.anganwadi_id 
-            AND wo.week_start_date >= ? 
+        LEFT JOIN weekly_orders wo ON a.id = wo.anganwadi_id
+            AND wo.week_start_date >= ?
             AND wo.week_start_date <= ?
             AND wo.status IN ('approved', 'dispatched', 'completed')
+        LEFT JOIN (
+            SELECT r1.*
+            FROM rates r1
+            WHERE r1.status = 'active'
+            AND r1.effective_from_date = (
+                SELECT MAX(r2.effective_from_date)
+                FROM rates r2
+                WHERE r2.status = 'active'
+                AND r2.effective_from_date <= wo.week_start_date
+            )
+        ) r ON 1=1
         LEFT JOIN villages v ON a.village_id = v.id
         LEFT JOIN talukas t ON v.taluka_id = t.id
         LEFT JOIN districts d ON t.district_id = d.id
@@ -97,7 +109,7 @@ if ($startDate && $endDate) {
     }
 }
 
-// Calculate totals
+// Calculate totals using dynamic rates from database
 $totalQuantity = 0;
 $totalAmount = 0;
 $totalGST = 0;
@@ -105,6 +117,7 @@ $grandTotal = 0;
 
 foreach ($reportData as $row) {
     $totalQuantity += $row['total_quantity'];
+    // Use the amount already calculated by the database query with dynamic rates
     $totalAmount += $row['total_amount'];
 }
 
@@ -392,14 +405,9 @@ $csrfToken = generateCSRFToken();
                         <option value="">All Talukas</option>
                     </select>
                 </div>
-                
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Rate per Packet (₹) *</label>
-                    <input type="number" class="form-control" name="rate" 
-                           value="<?php echo $ratePerPacket > 0 ? $ratePerPacket : ''; ?>"
-                           min="0" step="0.01" placeholder="Enter rate" required>
-                </div>
-                
+
+
+
                 <div class="col-md-3 mb-3">
                     <label class="form-label">GST (%) *</label>
                     <select class="form-select" name="gst" required>
@@ -462,7 +470,7 @@ $csrfToken = generateCSRFToken();
                 <div class="filter-item">
                     <label>District Name:</label>
                     <div class="value">
-                        <?php 
+                        <?php
                         if ($districtId) {
                             $district = array_filter($districts, fn($d) => $d['id'] == $districtId);
                             echo reset($district)['name'] ?? 'Unknown';
@@ -472,14 +480,14 @@ $csrfToken = generateCSRFToken();
                         ?>
                     </div>
                 </div>
-                
+
                 <div class="filter-item">
                     <label>Rate per Packet:</label>
                     <div class="value">
-                        <span class="rate-badge">₹<?php echo number_format($ratePerPacket, 2); ?></span>
+                        <span class="rate-badge">₹<?php echo number_format($ratePerPacket, 2); ?>/P</span>
                     </div>
                 </div>
-                
+
                 <div class="filter-item">
                     <label>GST:</label>
                     <div class="value">
@@ -530,7 +538,7 @@ $csrfToken = generateCSRFToken();
                                 </span>
                             </td>
                             <td class="text-end"><?php echo number_format($quantity, 2); ?></td>
-                            <td class="text-end">₹<?php echo number_format($ratePerPacket, 2); ?></td>
+                            <td class="text-end">₹<?php echo number_format($row['avg_rate_per_packet'], 2); ?></td>
                             <td class="text-end">₹<?php echo number_format($amount, 2); ?></td>
                         </tr>
                     <?php endforeach; ?>

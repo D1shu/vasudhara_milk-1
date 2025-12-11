@@ -709,7 +709,7 @@ $pageTitle = "Submit Order";
                 // Ensure selected date is Monday (JS check)
                 const date = new Date(this.value);
                 if (this.value && date.getDay() !== 1) {
-                    alert('Please select Monday as the week start date.');
+                    alert('કૃપા કરીને સોમવારને સપ્તાહની શરૂઆતની તારીખ તરીકે પસંદ કરો.');
                     this.value = '';
                     document.getElementById('summaryWeek').textContent = '-';
                 }
@@ -726,7 +726,7 @@ $pageTitle = "Submit Order";
 
             if (total === 0) {
                 e.preventDefault();
-                alert('Please enter quantity for at least one day.');
+                alert('કૃપા કરીને ઓછામાં ઓછા એક દિવસ માટે જથ્થો દાખલ કરો.');
                 return false;
             }
 
@@ -742,13 +742,13 @@ $pageTitle = "Submit Order";
 
                 if (children > maxChildren) {
                     e.preventDefault();
-                    alert(`Children on ${dayNames[day]} (${children}) exceed the number present in Anganwadi (${maxChildren}).`);
+                    alert(`અંગનવાડીમાં હાજર બાળકોની સંખ્યા (${maxChildren}) કરતાં ${dayNames[day]} પર બાળકો (${children}) વધારે છે.`);
                     return false;
                 }
 
                 if (pregnant > maxPregnant) {
                     e.preventDefault();
-                    alert(`Pregnant women on ${dayNames[day]} (${pregnant}) exceed the number present in Anganwadi (${maxPregnant}).`);
+                    alert(`અંગનવાડીમાં હાજર ગર્ભવતી મહિલાઓની સંખ્યા (${maxPregnant}) કરતાં ${dayNames[day]} પર ગર્ભવતી મહિલાઓ (${pregnant}) વધારે છે.`);
                     return false;
                 }
             }

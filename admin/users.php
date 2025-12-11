@@ -1,4 +1,4 @@
-<?php
+  php
 require_once '../config.php';
 require_once '../auth.php';
 require_once '../includes/functions.php';
@@ -21,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $mobile = sanitize($_POST['mobile']);
             $email = sanitize($_POST['email']);
             $role = sanitize($_POST['role']);
-            $anganwadiId = !empty($_POST['anganwadi_id']) ? (int)$_POST['anganwadi_id'] : null;
             $status = $_POST['status'] ?? 'active';
             
             // Validate mobile
@@ -37,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     if ($checkStmt->get_result()->num_rows > 0) {
                         $error = 'Mobile number already registered';
                     } else {
-                        $stmt = $db->prepare("INSERT INTO users (anganwadi_id, name, mobile, email, role, status) VALUES (?, ?, ?, ?, ?, ?)");
-                        $stmt->bind_param("isssss", $anganwadiId, $name, $mobile, $email, $role, $status);
+                        $stmt = $db->prepare("INSERT INTO users (name, mobile, email, role, status) VALUES (?, ?, ?, ?, ?)");
+                        $stmt->bind_param("sssss", $name, $mobile, $email, $role, $status);
                         
                         if ($stmt->execute()) {
                             $success = 'User created successfully!';
@@ -51,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $checkStmt->close();
                 } else {
                     $id = (int)$_POST['id'];
-                    $stmt = $db->prepare("UPDATE users SET anganwadi_id=?, name=?, mobile=?, email=?, role=?, status=? WHERE id=?");
-                    $stmt->bind_param("isssssi", $anganwadiId, $name, $mobile, $email, $role, $status, $id);
+                    $stmt = $db->prepare("UPDATE users SET name=?, mobile=?, email=?, role=?, status=? WHERE id=?");
+                    $stmt->bind_param("sssssi", $name, $mobile, $email, $role, $status, $id);
                     
                     if ($stmt->execute()) {
                         $success = 'User updated successfully!';
@@ -82,10 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // Get all users
 $db = getDB();
 $result = $db->query("
-    SELECT u.*, a.name as anganwadi_name, a.aw_code 
-    FROM users u 
-    LEFT JOIN anganwadi a ON u.anganwadi_id = a.id 
-    WHERE u.status = 'active' 
+    SELECT u.*
+    FROM users u
+    WHERE u.status = 'active'
     ORDER BY u.id DESC
 ");
 $users = [];
@@ -93,8 +91,7 @@ while ($row = $result->fetch_assoc()) {
     $users[] = $row;
 }
 
-// Get anganwadis for dropdown
-$anganwadis = getAnganwadiList();
+
 
 $csrfToken = generateCSRFToken();
 ?>
@@ -393,7 +390,6 @@ $csrfToken = generateCSRFToken();
                                 <th>Mobile</th>
                                 <th>Email</th>
                                 <th>Role</th>
-                                <th>Anganwadi</th>
                                 <th>Last Login</th>
                                 <th>Actions</th>
                             </tr>
@@ -409,13 +405,6 @@ $csrfToken = generateCSRFToken();
                                     <span class="badge badge-<?php echo $user['role']; ?>">
                                         <?php echo ucfirst($user['role']); ?>
                                     </span>
-                                </td>
-                                <td>
-                                    <?php if ($user['anganwadi_name']): ?>
-                                        <?php echo $user['aw_code']; ?> - <?php echo htmlspecialchars($user['anganwadi_name']); ?>
-                                    <?php else: ?>
-                                        <span class="text-muted">N/A</span>
-                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php echo $user['last_login'] ? formatDateTime($user['last_login']) : 'Never'; ?>
@@ -478,18 +467,7 @@ $csrfToken = generateCSRFToken();
                             </select>
                         </div>
                         
-                        <div class="mb-3" id="anganwadiSection">
-                            <label class="form-label">Assign Anganwadi</label>
-                            <select class="form-select" name="anganwadi_id" id="userAnganwadi">
-                                <option value="">Select Anganwadi</option>
-                                <?php foreach ($anganwadis as $aw): ?>
-                                    <option value="<?php echo $aw['id']; ?>">
-                                        <?php echo $aw['aw_code']; ?> - <?php echo $aw['name']; ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <small class="text-muted">Required for users, optional for admins</small>
-                        </div>
+
                         
                         <div class="mb-3">
                             <label class="form-label">Status *</label>
@@ -523,14 +501,7 @@ $csrfToken = generateCSRFToken();
         $(document).ready(function() {
             $('#usersTable').DataTable();
             
-            // Show/hide anganwadi dropdown based on role
-            $('#userRole').change(function() {
-                if ($(this).val() === 'user') {
-                    $('#anganwadiSection').show();
-                } else {
-                    $('#anganwadiSection').hide();
-                }
-            });
+
         });
         
         function editUser(user) {
@@ -541,13 +512,8 @@ $csrfToken = generateCSRFToken();
             $('#userMobile').val(user.mobile);
             $('#userEmail').val(user.email);
             $('#userRole').val(user.role);
-            $('#userAnganwadi').val(user.anganwadi_id);
             $('#userStatus').val(user.status);
-            
-            if (user.role !== 'user') {
-                $('#anganwadiSection').hide();
-            }
-            
+
             $('#userModal').modal('show');
         }
         
@@ -564,7 +530,6 @@ $csrfToken = generateCSRFToken();
             $('#modalTitle').text('Add User');
             $('#formAction').val('create');
             $('#userId').val('');
-            $('#anganwadiSection').show();
         });
     </script>
 </body>

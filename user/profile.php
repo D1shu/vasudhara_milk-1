@@ -12,12 +12,9 @@ $success = '';
 // Get user details
 $db = getDB();
 $stmt = $db->prepare("
-    SELECT u.*, a.name as anganwadi_name, a.aw_code, a.type as anganwadi_type,
-           a.total_children, a.pregnant_women, a.address,
-           v.name as village_name, t.name as taluka_name, d.name as district_name
+    SELECT u.*, v.name as village_name, t.name as taluka_name, d.name as district_name
     FROM users u
-    LEFT JOIN anganwadi a ON u.anganwadi_id = a.id
-    LEFT JOIN villages v ON a.village_id = v.id
+    LEFT JOIN villages v ON u.village_id = v.id
     LEFT JOIN talukas t ON v.taluka_id = t.id
     LEFT JOIN districts d ON t.district_id = d.id
     WHERE u.id = ?
@@ -240,7 +237,7 @@ $pageTitle = "My Profile";
                 <div class="profile-header">
                     <div class="profile-avatar"><?php echo strtoupper(substr($user['name'], 0, 1)); ?></div>
                     <h3><?php echo htmlspecialchars($user['name']); ?></h3>
-                    <div class="text-muted"><?php echo htmlspecialchars($user['anganwadi_name']); ?> <small class="d-block"><?php echo htmlspecialchars($user['aw_code']); ?></small></div>
+                    <div class="text-muted"><?php echo htmlspecialchars($user['village_name']); ?> <small class="d-block"><?php echo htmlspecialchars($user['taluka_name']); ?>, <?php echo htmlspecialchars($user['district_name']); ?></small></div>
                 </div>
 
                 <?php if ($error): ?>
@@ -298,17 +295,13 @@ $pageTitle = "My Profile";
                             </div>
                         </div>
 
-                        <!-- Anganwadi Details -->
+                        <!-- Location Details -->
                         <div class="card-custom">
-                            <div class="card-header-custom"><i class="fas fa-building me-2"></i> Anganwadi/School Details</div>
+                            <div class="card-header-custom"><i class="fas fa-map-marker-alt me-2"></i> Location Details</div>
                             <div class="card-body">
-                                <div class="info-row"><div class="info-label">Name:</div><div class="info-value"><?php echo htmlspecialchars($user['anganwadi_name']); ?></div></div>
-                                <div class="info-row"><div class="info-label">Code:</div><div class="info-value"><?php echo htmlspecialchars($user['aw_code']); ?></div></div>
-                                <div class="info-row"><div class="info-label">Type:</div><div class="info-value"><?php echo htmlspecialchars(ucfirst($user['anganwadi_type'])); ?></div></div>
-                                <div class="info-row"><div class="info-label">Location:</div><div class="info-value"><?php echo htmlspecialchars($user['village_name']); ?>, <?php echo htmlspecialchars($user['taluka_name']); ?>, <?php echo htmlspecialchars($user['district_name']); ?></div></div>
-                                <div class="info-row"><div class="info-label">Total Children</div><div class="info-value"><?php echo (int)$user['total_children']; ?></div></div>
-                                <div class="info-row"><div class="info-label">Pregnant Women</div><div class="info-value"><?php echo (int)$user['pregnant_women']; ?></div></div>
-                                <?php if ($user['address']): ?><div class="info-row"><div class="info-label">Address:</div><div class="info-value"><?php echo nl2br(htmlspecialchars($user['address'])); ?></div></div><?php endif; ?>
+                                <div class="info-row"><div class="info-label">Village:</div><div class="info-value"><?php echo htmlspecialchars($user['village_name'] ?: 'Not specified'); ?></div></div>
+                                <div class="info-row"><div class="info-label">Taluka:</div><div class="info-value"><?php echo htmlspecialchars($user['taluka_name'] ?: 'Not specified'); ?></div></div>
+                                <div class="info-row"><div class="info-label">District:</div><div class="info-value"><?php echo htmlspecialchars($user['district_name'] ?: 'Not specified'); ?></div></div>
                             </div>
                         </div>
                     </div>
@@ -318,7 +311,7 @@ $pageTitle = "My Profile";
                         <div class="card-custom">
                             <div class="card-header-custom"><i class="fas fa-chart-bar me-2"></i> My Statistics</div>
                             <div class="card-body">
-                                <?php $stats = getDashboardStats($userId, 'user'); ?>
+                                <?php $stats = getDashboardStats($userId); ?>
                                 <div class="stat-box mb-3"><div class="stat-number"><?php echo (int)$stats['total_orders']; ?></div><div class="stat-label">Total Orders</div></div>
                                 <div class="stat-box mb-3"><div class="stat-number"><?php echo (int)$stats['pending_orders']; ?></div><div class="stat-label">Pending Orders</div></div>
                                 <div class="stat-box mb-3"><div class="stat-number"><?php echo (int)$stats['approved_orders']; ?></div><div class="stat-label">Approved Orders</div></div>

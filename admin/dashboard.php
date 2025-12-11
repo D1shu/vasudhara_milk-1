@@ -19,6 +19,10 @@ $statusData = getStatusDistribution();
 // Get recent pending orders
 $pendingOrders = getOrdersByStatus('pending');
 
+// Get current rate
+$currentRate = getDB()->query("SELECT rate_per_packet, effective_from_date FROM rates WHERE status = 'active' ORDER BY effective_from_date DESC LIMIT 1");
+$currentRateData = $currentRate->fetch_assoc();
+
 $pageTitle = "Admin Dashboard";
 ?>
 <!DOCTYPE html>
@@ -546,6 +550,28 @@ $pageTitle = "Admin Dashboard";
                         </div>
                         <h3><?php echo $stats['total_users']; ?></h3>
                         <p>Active Users</p>
+                    </a>
+                </div>
+
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <a href="rate_management.php" class="stat-card info" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
+                        <div class="stat-icon" style="background: var(--info-color);">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <h3>₹<?php echo number_format($currentRateData['rate_per_packet'], 2); ?></h3>
+                        <p>Current Rate</p>
+                        <small class="text-muted">Effective: <?php echo formatDate($currentRateData['effective_from_date']); ?></small>
+                    </a>
+                </div>
+
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <a href="rate_management.php" class="stat-card primary" style="text-decoration: none; color: inherit; display: block; cursor: pointer;">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <h3>Manage</h3>
+                        <p>Rates</p>
+                        <small class="text-muted">Update packet rates</small>
                     </a>
                 </div>
             </div>

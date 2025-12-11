@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 01, 2025 at 03:41 AM
+-- Generation Time: Dec 07, 2025 at 01:29 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -40,15 +40,6 @@ CREATE TABLE `activity_logs` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `activity_logs`
---
-
-INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `table_name`, `record_id`, `old_data`, `new_data`, `ip_address`, `user_agent`, `created_at`) VALUES
-(1, 4, 'LOGOUT', 'users', 4, NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:01:32'),
-(2, 1, '1', 'order_created', 0, '4', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:20:10'),
-(3, 1, 'order_created', 'weekly_orders', 5, NULL, '\"{\\\"total_qty\\\":131,\\\"week\\\":\\\"2025-12-22\\\"}\"', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 02:33:37');
-
 -- --------------------------------------------------------
 
 --
@@ -73,15 +64,6 @@ CREATE TABLE `anganwadi` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `anganwadi`
---
-
-INSERT INTO `anganwadi` (`id`, `village_id`, `route_id`, `aw_code`, `name`, `type`, `total_children`, `pregnant_women`, `contact_person`, `mobile`, `email`, `address`, `status`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 'AW001', 'Vansda Anganwadi Center', 'anganwadi', 50, 6, 'Pushpa Damor', '9328366460', NULL, NULL, 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(2, 1, 1, 'AW002', 'Vansda Government School', 'school', 130, 0, 'Aman Malik', '8160948069', NULL, NULL, 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(3, 2, 1, 'AW003', 'Jalalpore Anganwadi', 'anganwadi', 40, 4, 'Abhi Patel', '7284832327', NULL, NULL, 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40');
-
 -- --------------------------------------------------------
 
 --
@@ -101,10 +83,10 @@ CREATE TABLE `districts` (
 --
 
 INSERT INTO `districts` (`id`, `name`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'Navsari', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(2, 'Valsad', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(3, 'Dang', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(4, 'Tapi', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40');
+(1, 'Navsari', 'active', '2025-12-07 07:29:00', '2025-12-07 07:29:00'),
+(2, 'Valsad', 'active', '2025-12-07 07:29:00', '2025-12-07 07:29:00'),
+(3, 'Dang', 'active', '2025-12-07 07:29:00', '2025-12-07 07:29:00'),
+(4, 'Tapi', 'active', '2025-12-07 07:29:00', '2025-12-07 07:29:00');
 
 -- --------------------------------------------------------
 
@@ -121,15 +103,6 @@ CREATE TABLE `notifications` (
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `type`, `is_read`, `created_at`) VALUES
-(1, 1, 'Order Approved', 'Your order for week 2025-12-22 to 2025-12-26 has been approved.', 'approval', 1, '2025-11-29 02:38:28'),
-(2, 1, 'Order Approved', 'Your order for week 2025-12-08 to 2025-12-12 has been approved.', 'approval', 1, '2025-11-29 15:26:10'),
-(3, 1, 'Order Approved', 'Your order for week 2025-11-24 to 2025-11-28 has been approved.', 'approval', 1, '2025-11-29 15:26:16');
 
 -- --------------------------------------------------------
 
@@ -165,15 +138,6 @@ CREATE TABLE `order_status_history` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `order_status_history`
---
-
-INSERT INTO `order_status_history` (`id`, `order_id`, `old_status`, `new_status`, `changed_by`, `remarks`, `created_at`) VALUES
-(1, 5, 'pending', 'approved', 4, '', '2025-11-29 02:38:28'),
-(2, 4, 'pending', 'approved', 4, '', '2025-11-29 15:26:10'),
-(3, 1, 'pending', 'approved', 4, '', '2025-11-29 15:26:16');
-
 -- --------------------------------------------------------
 
 --
@@ -194,15 +158,43 @@ CREATE TABLE `otp_logs` (
 --
 
 INSERT INTO `otp_logs` (`id`, `mobile`, `otp`, `expiry_time`, `verified`, `created_at`) VALUES
-(26, '9999999999', '495233', '2025-11-29 16:57:24', 1, '2025-11-29 16:56:57'),
-(27, '9999999999', '758475', '2025-11-30 05:37:31', 0, '2025-11-30 05:36:31'),
-(28, '9999999999', '257291', '2025-11-30 05:38:21', 1, '2025-11-30 05:38:08'),
-(29, '9999999999', '467149', '2025-11-30 08:14:21', 1, '2025-11-30 08:13:56'),
-(30, '9999999999', '708843', '2025-11-30 09:05:09', 1, '2025-11-30 09:04:56'),
-(31, '9999999999', '388961', '2025-11-30 11:52:34', 1, '2025-11-30 11:52:20'),
-(32, '9328366460', '757352', '2025-11-30 12:11:45', 1, '2025-11-30 12:11:03'),
-(33, '9999999999', '782960', '2025-11-30 12:51:13', 1, '2025-11-30 12:50:55'),
-(34, '9999999999', '881208', '2025-12-01 02:35:05', 1, '2025-12-01 02:34:45');
+(1, '9999999999', '539557', '2025-12-03 09:04:55', 1, '2025-12-03 09:04:40'),
+(2, '9999999999', '862770', '2025-12-03 16:43:03', 1, '2025-12-03 16:42:51'),
+(3, '9999999999', '559166', '2025-12-03 16:54:24', 1, '2025-12-03 16:54:15'),
+(4, '9999999999', '658545', '2025-12-03 16:59:14', 1, '2025-12-03 16:59:05'),
+(5, '9999999999', '904676', '2025-12-06 13:19:45', 1, '2025-12-06 13:19:32'),
+(6, '9999999999', '560494', '2025-12-06 14:03:55', 1, '2025-12-06 14:03:43'),
+(7, '9999999999', '103661', '2025-12-06 16:27:21', 1, '2025-12-06 16:27:06'),
+(8, '9999999999', '826173', '2025-12-07 11:40:13', 1, '2025-12-07 11:39:58'),
+(9, '9999999999', '208909', '2025-12-07 11:49:13', 1, '2025-12-07 11:49:00'),
+(10, '9999999999', '654029', '2025-12-07 12:08:17', 1, '2025-12-07 12:08:06'),
+(11, '9999999999', '691336', '2025-12-07 12:23:01', 1, '2025-12-07 12:22:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rates`
+--
+
+CREATE TABLE `rates` (
+  `id` int(11) NOT NULL,
+  `rate_per_packet` decimal(10,2) NOT NULL,
+  `effective_from_date` date NOT NULL,
+  `description` text DEFAULT NULL,
+  `status` enum('active','inactive') DEFAULT 'active',
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rates`
+--
+
+INSERT INTO `rates` (`id`, `rate_per_packet`, `effective_from_date`, `description`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 25.00, '2025-11-01', NULL, 'active', NULL, '2025-12-06 16:35:20', '2025-12-06 16:35:20'),
+(2, 28.00, '2025-12-01', NULL, 'active', NULL, '2025-12-06 16:35:20', '2025-12-06 16:35:20'),
+(3, 30.00, '2025-12-15', NULL, 'active', NULL, '2025-12-06 16:35:20', '2025-12-06 16:35:20');
 
 -- --------------------------------------------------------
 
@@ -222,15 +214,6 @@ CREATE TABLE `routes` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `routes`
---
-
-INSERT INTO `routes` (`id`, `route_number`, `route_name`, `vehicle_number`, `driver_name`, `driver_mobile`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'R001', 'Vansda Town Route', 'GJ-05-AB-1234', 'Vikram Patel', '9876543210', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(2, 'R002', 'Vansda Rural Route', 'GJ-05-CD-5678', 'Ajay Singh', '9876543211', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(3, 'R003', 'Jalalpore Route', 'GJ-05-EF-9012', 'Rajesh Desai', '9876543212', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40');
-
 -- --------------------------------------------------------
 
 --
@@ -244,21 +227,6 @@ CREATE TABLE `system_settings` (
   `description` varchar(255) DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `system_settings`
---
-
-INSERT INTO `system_settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_at`) VALUES
-(1, 'sms_api', 'fast2sms', 'SMS API provider (fast2sms/msg91)', '2025-11-29 01:58:40'),
-(2, 'sms_api_key', '', 'API key for SMS service', '2025-11-29 01:58:40'),
-(3, 'bag_size', '500', 'Milk bag size in ml', '2025-11-29 01:58:40'),
-(4, 'otp_expiry', '5', 'OTP expiry time in minutes', '2025-11-29 01:58:40'),
-(5, 'session_timeout', '30', 'Session timeout in minutes', '2025-11-29 01:58:40'),
-(6, 'order_approval_sms', '1', 'Send SMS on order approval (0/1)', '2025-11-29 01:58:40'),
-(7, 'company_name', 'Vasudhara Milk Distribution', 'Company name for reports', '2025-11-29 01:58:40'),
-(8, 'company_address', 'Vansda, Navsari, Gujarat', 'Company address', '2025-11-29 01:58:40'),
-(9, 'company_phone', '020-12345678', 'Company contact number', '2025-11-29 01:58:40');
 
 -- --------------------------------------------------------
 
@@ -274,18 +242,6 @@ CREATE TABLE `talukas` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `talukas`
---
-
-INSERT INTO `talukas` (`id`, `district_id`, `name`, `status`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Vansda', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(2, 1, 'Jalalpore', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(3, 1, 'Chikhli', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(4, 2, 'Valsad', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(5, 2, 'Umbergaon', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(6, 2, 'Pardi', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40');
 
 -- --------------------------------------------------------
 
@@ -312,13 +268,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `village_id`, `anganwadi_id`, `name`, `mobile`, `email`, `role`, `status`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, NULL, 1, 'Pushpa Damor', '9328366460', 'pushpa@example.com', 'user', 'active', NULL, '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(2, NULL, 2, 'Aman Malik', '8160948069', 'aman@example.com', 'user', 'active', NULL, '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(3, NULL, 3, 'Abhi Patel', '7284832327', 'abhi@example.com', 'user', 'active', NULL, '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(4, NULL, NULL, 'Admin User', '9999999999', 'admin@vasudhara.com', 'admin', 'active', NULL, '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(5, NULL, NULL, 'Dishant Admin', '9999999991', 'dishant@vasudhara.com', 'admin', 'active', NULL, '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(6, NULL, NULL, 'JINAY', '9999999996', 'malijinay@test.com', '', 'active', NULL, '2025-11-29 09:58:33', '2025-11-29 09:58:33'),
-(8, 2, 3, 'pintu', '9876543210', 'admin@coffee.com', 'user', 'active', NULL, '2025-11-29 14:18:49', '2025-11-29 14:35:03');
+(1, NULL, NULL, 'Admin', '9999999999', 'admin@gmail.com', 'admin', 'active', NULL, '2025-12-03 09:01:03', '2025-12-03 09:01:03'),
+(3, NULL, NULL, 'Admin', '9974171087', 'admin@gmail.com', 'admin', 'active', NULL, '2025-12-03 09:02:17', '2025-12-03 09:02:17');
 
 -- --------------------------------------------------------
 
@@ -334,18 +285,6 @@ CREATE TABLE `villages` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `villages`
---
-
-INSERT INTO `villages` (`id`, `taluka_id`, `name`, `status`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Vansda', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(2, 1, 'Bhedkund', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(3, 1, 'Adoli', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(4, 2, 'Jalalpore', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(5, 2, 'Unava', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(6, 2, 'Uchhal', 'active', '2025-11-29 01:58:40', '2025-11-29 01:58:40');
 
 -- --------------------------------------------------------
 
@@ -376,18 +315,6 @@ CREATE TABLE `weekly_orders` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `weekly_orders`
---
-
-INSERT INTO `weekly_orders` (`id`, `user_id`, `anganwadi_id`, `week_start_date`, `week_end_date`, `mon_qty`, `tue_qty`, `wed_qty`, `thu_qty`, `fri_qty`, `total_qty`, `children_allocation`, `pregnant_women_allocation`, `total_bags`, `remarks`, `status`, `approved_by`, `approved_at`, `dispatched_at`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, '2025-11-24', '2025-11-28', 22.00, 22.00, 22.00, 22.00, 22.00, 110.00, 90.00, 22.00, 225, NULL, 'approved', 4, '2025-11-29 15:26:16', NULL, '2025-11-29 01:58:40', '2025-11-29 15:26:16'),
-(2, 2, 2, '2025-11-24', '2025-11-28', 60.00, 60.00, 60.00, 60.00, 60.00, 300.00, 300.00, 0.00, 600, NULL, 'approved', NULL, NULL, NULL, '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(3, 3, 3, '2025-11-24', '2025-11-28', 20.50, 19.00, 21.00, 20.50, 19.00, 100.00, 76.00, 24.00, 200, NULL, 'dispatched', NULL, NULL, NULL, '2025-11-29 01:58:40', '2025-11-29 01:58:40'),
-(4, 1, 1, '2025-12-08', '2025-12-12', 17.00, 25.00, 41.00, 56.00, 74.00, 213.00, 197.00, 16.00, 426, '', 'approved', 4, '2025-11-29 15:26:10', NULL, '2025-11-29 02:20:10', '2025-11-29 15:26:10'),
-(5, 1, 1, '2025-12-22', '2025-12-26', 24.00, 25.00, 16.00, 36.00, 30.00, 131.00, 111.00, 20.00, 131, '', 'approved', 4, '2025-11-29 02:38:28', NULL, '2025-11-29 02:33:37', '2025-11-29 02:38:28'),
-(6, 1, 1, '2025-12-01', '2025-12-05', 4.00, 2.00, 10.00, 13.00, 6.00, 35.00, 31.00, 4.00, 35, '', 'pending', NULL, NULL, NULL, '2025-11-30 12:50:38', '2025-11-30 12:50:38');
 
 --
 -- Indexes for dumped tables
@@ -457,6 +384,13 @@ ALTER TABLE `otp_logs`
   ADD KEY `idx_expiry` (`expiry_time`);
 
 --
+-- Indexes for table `rates`
+--
+ALTER TABLE `rates`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_rates_created_by` (`created_by`);
+
+--
 -- Indexes for table `routes`
 --
 ALTER TABLE `routes`
@@ -522,25 +456,25 @@ ALTER TABLE `weekly_orders`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `anganwadi`
 --
 ALTER TABLE `anganwadi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `districts`
 --
 ALTER TABLE `districts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -552,49 +486,55 @@ ALTER TABLE `orders`
 -- AUTO_INCREMENT for table `order_status_history`
 --
 ALTER TABLE `order_status_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `otp_logs`
 --
 ALTER TABLE `otp_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `rates`
+--
+ALTER TABLE `rates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `routes`
 --
 ALTER TABLE `routes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `system_settings`
 --
 ALTER TABLE `system_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `talukas`
 --
 ALTER TABLE `talukas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `villages`
 --
 ALTER TABLE `villages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `weekly_orders`
 --
 ALTER TABLE `weekly_orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
@@ -632,6 +572,12 @@ ALTER TABLE `orders`
 ALTER TABLE `order_status_history`
   ADD CONSTRAINT `order_status_history_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `weekly_orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `order_status_history_ibfk_2` FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `rates`
+--
+ALTER TABLE `rates`
+  ADD CONSTRAINT `fk_rates_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `talukas`
